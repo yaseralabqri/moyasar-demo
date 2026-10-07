@@ -1,0 +1,2940 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Moyasar — Live Payment Demo</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Moyasar payment form v2.2.14, served from this repo so the demo works on
+     blocked or slow client wifi. Vendored from:
+       npm pack moyasar-payment-form@2.2.14  →  package/dist/
+     If vendor/ is ever missing, swap in the CDN lines below instead:
+     <link rel="stylesheet" href="https://unpkg.com/moyasar-payment-form@2.2.14/dist/moyasar.css" />
+     <script src="https://unpkg.com/moyasar-payment-form@2.2.14/dist/moyasar.umd.js"></script> -->
+<link rel="stylesheet" href="vendor/moyasar.css" />
+<script src="vendor/moyasar.umd.js"></script>
+
+<style>
+:root{
+  --paper:#FAF9F5;
+  --surface:#FFFFFF;
+  --ink:#1A1600;
+  --ink-soft:#5C5748;
+  --muted:#8A8574;
+  --line:#E6E3D9;
+  --line-soft:#F0EEE6;
+  --accent:#6B5FE6;
+  --accent-soft:#F0EEFE;
+  --ok:#0B8A5F;
+  --ok-soft:#E8F5F0;
+  --warn:#B8860B;
+  --danger:#C4453C;
+  --code-bg:#1A1600;
+  --code-ink:#D8D4C4;
+
+  --sans:'Inter',system-ui,sans-serif;
+  --arabic:'IBM Plex Sans Arabic',system-ui,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:inherit;margin:0;padding:0;}
+html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%;}
+body{
+  font-family:var(--sans);
+  background:var(--paper);
+  color:var(--ink);
+  min-height:100%;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+html[dir="rtl"] body{font-family:var(--arabic);}
+html[dir="rtl"] .mono{font-family:var(--mono);direction:ltr;}
+
+/* ─── TOP BAR ─────────────────────────────────── */
+.topbar{
+  position:sticky;top:env(safe-area-inset-top,0px);z-index:60;
+  background:rgba(250,249,245,.88);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
+  padding:0 20px;
+}
+.topbar-inner{
+  max-width:1400px;margin:0 auto;
+  min-height:58px;
+  display:flex;align-items:center;gap:18px;flex-wrap:wrap;
+  padding:9px 0;
+}
+.brand{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.brand-mark{
+  width:30px;height:30px;border-radius:8px;
+  background:var(--ink);
+  display:grid;place-items:center;padding:6px;flex-shrink:0;
+}
+.brand-mark img{width:100%;height:100%;object-fit:contain;filter:invert(1);}
+.brand-name{font-size:14px;font-weight:700;letter-spacing:-.01em;line-height:1.1;}
+.brand-sub{font-size:11px;color:var(--muted);line-height:1.2;}
+
+.demo-chip{
+  font-size:10px;font-weight:600;
+  padding:3px 8px;border-radius:5px;
+  background:#FFF4D6;color:#7A5C00;border:1px solid #F0DFA8;
+  letter-spacing:.01em;flex-shrink:0;
+}
+
+.tabs{display:flex;gap:2px;background:var(--line-soft);padding:3px;border-radius:9px;}
+.tab{
+  border:0;background:transparent;cursor:pointer;
+  font-family:inherit;font-size:13px;font-weight:500;
+  color:var(--ink-soft);padding:6px 14px;border-radius:7px;
+  transition:background .14s,color .14s;
+}
+.tab:hover{color:var(--ink);}
+.tab[aria-selected="true"]{background:var(--surface);color:var(--ink);font-weight:600;box-shadow:0 1px 2px rgba(26,22,0,.07);}
+.tab:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
+
+.topbar-right{margin-inline-start:auto;display:flex;align-items:center;gap:8px;}
+.ghost-btn{
+  border:1px solid var(--line);background:var(--surface);
+  color:var(--ink-soft);cursor:pointer;
+  font-family:inherit;font-size:12.5px;font-weight:500;
+  padding:7px 12px;border-radius:8px;
+  display:inline-flex;align-items:center;gap:6px;
+  transition:border-color .14s,color .14s;
+  white-space:nowrap;
+}
+.ghost-btn:hover{border-color:var(--muted);color:var(--ink);}
+.ghost-btn:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
+.ghost-btn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff;}
+.dot{width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.55;}
+
+/* ─── LAYOUT ──────────────────────────────────── */
+.shell{
+  max-width:1400px;margin:0 auto;padding:26px 20px 60px;
+  display:grid;grid-template-columns:1fr;gap:22px;
+  align-items:start;
+}
+.shell.with-panel{grid-template-columns:minmax(0,1fr) 430px;}
+@media(max-width:1080px){.shell.with-panel{grid-template-columns:1fr;}}
+
+.stage{min-width:0;}
+
+/* ─── SETUP NOTICE ────────────────────────────── */
+.notice{
+  border:1px solid #F0DFA8;background:#FFFBEF;
+  border-radius:12px;padding:16px 18px;margin-bottom:22px;
+}
+.notice h3{font-size:14px;font-weight:600;margin-bottom:5px;}
+.notice p{font-size:13px;color:var(--ink-soft);line-height:1.6;}
+.notice code{
+  font-family:var(--mono);font-size:12px;
+  background:#F5EDD6;padding:1px 5px;border-radius:4px;
+}
+
+/* ─── SCENARIO HEADER ─────────────────────────── */
+.stage-head{margin-bottom:20px;}
+.stage-head h1{
+  font-size:25px;font-weight:600;letter-spacing:-.022em;
+  line-height:1.2;margin-bottom:5px;
+}
+.stage-head p{font-size:14px;color:var(--ink-soft);max-width:60ch;line-height:1.6;}
+
+/* ─── STORE ───────────────────────────────────── */
+.store{
+  background:var(--surface);border:1px solid var(--line);
+  border-radius:14px;overflow:hidden;
+}
+.store-bar{
+  padding:15px 20px;border-bottom:1px solid var(--line-soft);
+  display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+}
+.store-id{display:flex;align-items:center;gap:11px;min-width:0;}
+.store-avatar{
+  width:36px;height:36px;border-radius:9px;flex-shrink:0;
+  background:var(--ink);color:var(--paper);
+  display:grid;place-items:center;
+  font-weight:600;font-size:15px;
+}
+.store-name{
+  font-size:15px;font-weight:600;
+  border:0;background:transparent;font-family:inherit;color:var(--ink);
+  padding:2px 5px;margin-inline-start:-5px;border-radius:5px;
+  width:16ch;min-width:0;
+}
+.store-name:hover{background:var(--line-soft);}
+.store-name:focus{outline:2px solid var(--accent);outline-offset:0;background:var(--surface);}
+.store-tag{font-size:12px;color:var(--muted);padding-inline-start:5px;}
+
+.methods{display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+.method{
+  font-size:10.5px;font-weight:600;color:var(--ink-soft);
+  background:var(--line-soft);padding:4px 8px;border-radius:5px;
+  white-space:nowrap;
+}
+
+.goods{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));
+  gap:1px;background:var(--line-soft);
+  border-bottom:1px solid var(--line-soft);
+}
+.good{
+  background:var(--surface);padding:16px;
+  display:flex;flex-direction:column;gap:3px;
+  border:0;cursor:pointer;font-family:inherit;text-align:start;
+  transition:background .12s;
+}
+.good:hover{background:#FDFCF9;}
+.good:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;}
+.good-art{
+  height:76px;border-radius:9px;margin-bottom:9px;
+  display:grid;place-items:center;font-size:29px;
+  background:var(--line-soft);
+}
+.good-name{font-size:13.5px;font-weight:500;line-height:1.35;}
+.good-price{font-size:13px;color:var(--ink-soft);font-variant-numeric:tabular-nums;}
+.good-add{
+  font-size:11.5px;font-weight:600;color:var(--accent);
+  margin-top:5px;opacity:0;transition:opacity .12s;
+}
+.good:hover .good-add,.good:focus-visible .good-add{opacity:1;}
+
+/* ─── CART ────────────────────────────────────── */
+.cart{padding:18px 20px;}
+.cart-title{
+  font-size:12px;font-weight:600;color:var(--muted);
+  margin-bottom:11px;
+}
+.cart-empty{
+  font-size:13.5px;color:var(--muted);
+  padding:22px 0;text-align:center;
+}
+.line{
+  display:flex;align-items:center;gap:11px;
+  padding:9px 0;border-bottom:1px solid var(--line-soft);
+}
+.line:last-of-type{border-bottom:0;}
+.line-icon{font-size:17px;flex-shrink:0;}
+.line-name{flex:1;font-size:13.5px;min-width:0;}
+.qty{display:flex;align-items:center;gap:1px;flex-shrink:0;}
+.qty button{
+  width:25px;height:25px;border:1px solid var(--line);
+  background:var(--surface);cursor:pointer;
+  font-family:inherit;font-size:14px;color:var(--ink-soft);
+  display:grid;place-items:center;
+  transition:border-color .12s;
+}
+.qty button:hover{border-color:var(--muted);color:var(--ink);}
+.qty button:focus-visible{outline:2px solid var(--accent);outline-offset:1px;z-index:1;}
+.qty button:first-child{border-radius:6px 0 0 6px;}
+.qty button:last-child{border-radius:0 6px 6px 0;}
+html[dir="rtl"] .qty button:first-child{border-radius:0 6px 6px 0;}
+html[dir="rtl"] .qty button:last-child{border-radius:6px 0 0 6px;}
+.qty span{
+  min-width:30px;text-align:center;font-size:13px;font-weight:500;
+  font-variant-numeric:tabular-nums;
+  border-block:1px solid var(--line);height:25px;line-height:23px;
+}
+.line-total{
+  font-size:13.5px;font-weight:500;min-width:74px;
+  text-align:end;font-variant-numeric:tabular-nums;flex-shrink:0;
+}
+
+.totals{
+  margin-top:14px;padding-top:14px;border-top:1px solid var(--line);
+  display:flex;flex-direction:column;gap:6px;
+}
+.total-row{
+  display:flex;justify-content:space-between;
+  font-size:13.5px;color:var(--ink-soft);
+  font-variant-numeric:tabular-nums;
+}
+.total-row.grand{
+  font-size:18px;font-weight:600;color:var(--ink);
+  margin-top:4px;padding-top:10px;border-top:1px solid var(--line-soft);
+}
+
+.pay-btn{
+  width:100%;margin-top:16px;
+  background:var(--ink);color:var(--paper);
+  border:0;border-radius:10px;padding:14px;
+  font-family:inherit;font-size:14.5px;font-weight:600;
+  cursor:pointer;transition:opacity .14s;
+}
+.pay-btn:hover:not(:disabled){opacity:.87;}
+.pay-btn:disabled{background:var(--line);color:var(--muted);cursor:not-allowed;}
+.pay-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+
+/* ─── INVOICE ─────────────────────────────────── */
+.invoice{
+  background:var(--surface);border:1px solid var(--line);
+  border-radius:14px;overflow:hidden;max-width:620px;
+}
+.inv-head{
+  padding:22px;border-bottom:1px solid var(--line-soft);
+  display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;
+}
+.inv-from{font-size:13px;color:var(--muted);margin-bottom:3px;}
+.inv-issuer{font-size:16px;font-weight:600;}
+.inv-ref{text-align:end;}
+.inv-ref-num{
+  font-family:var(--mono);font-size:13px;font-weight:500;
+  direction:ltr;display:inline-block;
+}
+.inv-due{font-size:12px;color:var(--muted);margin-top:3px;}
+
+.inv-amount{
+  padding:26px 22px;
+  border-bottom:1px solid var(--line-soft);
+  background:linear-gradient(180deg,#FDFCF9,var(--surface));
+}
+.inv-amount-label{font-size:12.5px;color:var(--muted);margin-bottom:4px;}
+.inv-amount-value{
+  font-size:39px;font-weight:600;letter-spacing:-.03em;
+  font-variant-numeric:tabular-nums;line-height:1.05;
+}
+.inv-amount-value small{font-size:19px;font-weight:500;color:var(--ink-soft);margin-inline-start:6px;letter-spacing:0;}
+
+.inv-body{padding:20px 22px;}
+.inv-line{
+  display:flex;justify-content:space-between;gap:14px;
+  padding:9px 0;font-size:13.5px;border-bottom:1px solid var(--line-soft);
+}
+.inv-line:last-child{border-bottom:0;}
+.inv-line span:last-child{font-variant-numeric:tabular-nums;color:var(--ink-soft);flex-shrink:0;}
+.inv-foot{padding:0 22px 22px;}
+
+/* ─── CHECKOUT SHEET ──────────────────────────── */
+.sheet-bg{
+  position:fixed;inset:0;z-index:100;
+  background:rgba(26,22,0,.42);
+  display:none;align-items:flex-start;justify-content:center;
+  padding:28px 16px;overflow-y:auto;
+  backdrop-filter:blur(2px);
+}
+.sheet-bg.open{display:flex;}
+.sheet{
+  background:var(--surface);border-radius:15px;
+  width:100%;max-width:470px;margin:auto;
+  box-shadow:0 24px 64px rgba(26,22,0,.25);
+  overflow:hidden;
+}
+.sheet-head{
+  padding:17px 20px;border-bottom:1px solid var(--line-soft);
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+}
+.sheet-title{font-size:15px;font-weight:600;}
+.sheet-amount{font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;}
+.sheet-close{
+  border:0;background:var(--line-soft);cursor:pointer;
+  width:29px;height:29px;border-radius:7px;
+  font-size:15px;color:var(--ink-soft);
+  display:grid;place-items:center;flex-shrink:0;
+  transition:background .12s;
+}
+.sheet-close:hover{background:var(--line);}
+.sheet-close:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
+.sheet-body{padding:20px;}
+
+.testcards{
+  margin:0 20px 20px;padding:13px 15px;
+  background:var(--accent-soft);border-radius:10px;
+}
+.testcards h4{font-size:11.5px;font-weight:600;color:var(--accent);margin-bottom:8px;}
+.tc{
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+  font-size:12px;padding:3px 0;
+}
+.tc-num{
+  font-family:var(--mono);font-size:11.5px;
+  color:var(--ink);direction:ltr;
+  background:rgba(255,255,255,.7);padding:2px 6px;border-radius:4px;
+  cursor:pointer;border:1px solid transparent;
+}
+.tc-num:hover{border-color:var(--accent);}
+.tc-label{color:var(--ink-soft);}
+
+/* ─── RESULT ──────────────────────────────────── */
+.result{
+  background:var(--surface);border:1px solid var(--line);
+  border-radius:14px;padding:34px 26px;text-align:center;max-width:520px;
+}
+.result-mark{
+  width:52px;height:52px;border-radius:50%;
+  display:grid;place-items:center;margin:0 auto 16px;
+  font-size:25px;
+}
+.result-mark.ok{background:var(--ok-soft);color:var(--ok);}
+.result-mark.fail{background:#FBEDEC;color:var(--danger);}
+.result h2{font-size:20px;font-weight:600;margin-bottom:6px;letter-spacing:-.015em;}
+.result p{font-size:14px;color:var(--ink-soft);margin-bottom:22px;line-height:1.6;}
+.result-meta{
+  text-align:start;background:#FDFCF9;border:1px solid var(--line-soft);
+  border-radius:10px;padding:14px;margin-bottom:22px;
+}
+.meta-row{
+  display:flex;justify-content:space-between;gap:14px;
+  font-size:12.5px;padding:5px 0;
+}
+.meta-row + .meta-row{border-top:1px solid var(--line-soft);}
+.meta-key{color:var(--muted);flex-shrink:0;}
+.meta-val{
+  font-family:var(--mono);font-size:11.5px;
+  text-align:end;word-break:break-all;direction:ltr;
+}
+
+/* ─── DEV PANEL ───────────────────────────────── */
+.devpanel{
+  background:var(--code-bg);border-radius:14px;
+  overflow:hidden;position:sticky;
+  top:calc(env(safe-area-inset-top,0px) + 76px);
+  max-height:calc(100vh - 110px);
+  display:flex;flex-direction:column;
+}
+@media(max-width:1080px){.devpanel{position:static;max-height:none;}}
+.dev-head{
+  padding:13px 17px;border-bottom:1px solid rgba(216,212,196,.14);
+  display:flex;align-items:center;justify-content:space-between;gap:10px;flex-shrink:0;
+}
+.dev-title{
+  font-size:12.5px;font-weight:600;color:var(--code-ink);
+  display:flex;align-items:center;gap:7px;
+}
+.live-dot{
+  width:6px;height:6px;border-radius:50%;background:#4ADE80;
+  box-shadow:0 0 0 3px rgba(74,222,128,.16);
+}
+/* 12 tabs will not fit on one line, so the strip gets its own scrollable row */
+.dev-tabstrip{
+  flex-shrink:0;border-bottom:1px solid rgba(216,212,196,.14);
+  overflow-x:auto;scrollbar-width:thin;
+  -webkit-overflow-scrolling:touch;
+}
+.dev-tabstrip::-webkit-scrollbar{height:4px;}
+.dev-tabstrip::-webkit-scrollbar-thumb{background:rgba(216,212,196,.18);border-radius:4px;}
+.dev-tabs{display:flex;gap:2px;padding:8px 13px;width:max-content;min-width:100%;}
+.dev-tab{
+  border:0;background:transparent;cursor:pointer;
+  font-family:inherit;font-size:11.5px;font-weight:500;
+  color:rgba(216,212,196,.55);padding:5px 10px;border-radius:6px;
+  transition:background .12s,color .12s;
+  white-space:nowrap;flex-shrink:0;
+}
+.dev-tab:hover{color:var(--code-ink);}
+.dev-tab[aria-selected="true"]{background:rgba(216,212,196,.13);color:var(--code-ink);}
+.dev-tab:focus-visible{outline:2px solid #6B5FE6;outline-offset:1px;}
+.dev-body{padding:15px 17px;overflow-y:auto;flex:1;min-height:0;}
+.dev-note{
+  font-size:11.5px;color:rgba(216,212,196,.62);
+  line-height:1.65;margin-bottom:13px;
+}
+.dev-note strong{color:var(--code-ink);font-weight:600;}
+.dev-warn{
+  font-size:11.5px;line-height:1.6;
+  color:#F5C77E;background:rgba(245,199,126,.09);
+  border:1px solid rgba(245,199,126,.22);
+  border-radius:8px;padding:10px 12px;margin-bottom:13px;
+}
+pre{
+  font-family:var(--mono);font-size:11.5px;line-height:1.72;
+  color:var(--code-ink);white-space:pre;
+  overflow-x:auto;direction:ltr;text-align:left;
+  padding-bottom:3px;
+}
+pre::-webkit-scrollbar{height:7px;}
+pre::-webkit-scrollbar-thumb{background:rgba(216,212,196,.2);border-radius:4px;}
+.dev-body::-webkit-scrollbar{width:7px;}
+.dev-body::-webkit-scrollbar-thumb{background:rgba(216,212,196,.16);border-radius:4px;}
+.k{color:#A5B4FC;}
+.s{color:#86EFAC;}
+.n{color:#FCD34D;}
+.c{color:rgba(216,212,196,.4);font-style:italic;}
+.p{color:#F0ABFC;}
+
+.opts{
+  display:flex;flex-wrap:wrap;gap:7px;
+  margin-top:14px;padding-top:13px;border-top:1px solid var(--line-soft);
+}
+.opts-label{
+  width:100%;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:2px;
+}
+.opt{
+  display:inline-flex;align-items:center;gap:7px;
+  font-size:12.5px;color:var(--ink-soft);
+  border:1px solid var(--line);border-radius:8px;
+  padding:6px 11px;cursor:pointer;user-select:none;
+  transition:border-color .14s,background .14s,color .14s;
+}
+.opt:hover{border-color:var(--muted);}
+.opt input{
+  appearance:none;-webkit-appearance:none;
+  width:15px;height:15px;flex-shrink:0;margin:0;
+  border:1.5px solid var(--line);border-radius:4px;
+  background:var(--surface);cursor:pointer;position:relative;
+  transition:background .14s,border-color .14s;
+}
+.opt input:checked{background:var(--accent);border-color:var(--accent);}
+.opt input:checked::after{
+  content:'✓';position:absolute;inset:0;
+  display:grid;place-items:center;color:#fff;font-size:10px;font-weight:700;
+}
+.opt input:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
+.opt.on{border-color:var(--accent);background:var(--accent-soft);color:var(--ink);}
+.opt-note{
+  width:100%;font-size:11px;color:var(--muted);line-height:1.6;margin-top:4px;
+}
+.opt-note strong{color:var(--ink-soft);font-weight:600;}
+
+.meta-editor{
+  width:100%;margin-top:9px;padding:12px 13px;
+  background:#FBFAF6;border:1px solid var(--line);border-radius:10px;
+}
+.meta-head{
+  font-size:11px;font-weight:600;color:var(--muted);margin-bottom:8px;
+}
+.meta-pair{display:flex;gap:6px;margin-bottom:6px;}
+.meta-pair input{
+  font-family:var(--mono);font-size:11.5px;
+  border:1px solid var(--line);border-radius:6px;
+  padding:6px 9px;background:var(--surface);color:var(--ink);
+  min-width:0;direction:ltr;text-align:left;
+  transition:border-color .14s;
+}
+.meta-pair input:focus{outline:none;border-color:var(--accent);}
+.meta-k{flex:0 0 40%;color:var(--accent);}
+.meta-v{flex:1;}
+
+/* ─── LIVE-KEY BLOCK ──────────────────────────── */
+.blocked{
+  border:1px solid #E8A9A3;background:#FBEDEC;
+  border-radius:12px;padding:18px 20px;margin-bottom:22px;
+}
+.blocked h3{font-size:14.5px;font-weight:700;color:var(--danger);margin-bottom:6px;}
+.blocked p{font-size:13px;color:var(--ink-soft);line-height:1.65;}
+.blocked code{
+  font-family:var(--mono);font-size:12px;
+  background:rgba(196,69,60,.1);padding:1px 5px;border-radius:4px;
+}
+
+/* ─── PERSONA STRIP ───────────────────────────── */
+.personas{margin-bottom:24px;}
+.personas-label{
+  font-size:11px;font-weight:600;color:var(--muted);
+  letter-spacing:.03em;text-transform:uppercase;margin-bottom:9px;
+}
+.persona-row{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:10px;
+}
+.persona{
+  background:var(--surface);border:1px solid var(--line);
+  border-radius:12px;padding:14px 15px;text-align:start;
+  cursor:pointer;font-family:inherit;
+  display:flex;flex-direction:column;gap:3px;
+  transition:border-color .14s,box-shadow .14s,transform .14s;
+}
+.persona:hover{border-color:var(--accent);box-shadow:0 3px 14px rgba(107,95,230,.1);}
+.persona:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+.persona[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);}
+.persona-icon{font-size:17px;line-height:1;margin-bottom:5px;}
+.persona-body{display:flex;flex-direction:column;gap:2px;min-width:0;}
+.persona-name{font-size:13.5px;font-weight:600;color:var(--ink);}
+.persona-what{font-size:11.5px;color:var(--ink-soft);line-height:1.55;}
+
+/* ─── SCOPE BADGE ─────────────────────────────── */
+.scope{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:10.5px;font-weight:600;line-height:1.45;
+  padding:4px 9px;border-radius:6px;
+  background:#FFF4D6;color:#7A5C00;border:1px solid #F0DFA8;
+  margin-bottom:12px;max-width:100%;
+}
+.dev-body .scope{
+  background:rgba(245,199,126,.1);color:#F5C77E;
+  border-color:rgba(245,199,126,.26);
+}
+
+/* ─── DEV COMPARISON TABLE ────────────────────── */
+.cmp{
+  width:100%;border-collapse:collapse;
+  font-size:11px;margin-bottom:13px;
+  color:rgba(216,212,196,.78);
+}
+.cmp th,.cmp td{
+  text-align:start;padding:6px 8px;
+  border-bottom:1px solid rgba(216,212,196,.12);
+  vertical-align:top;line-height:1.5;
+}
+.cmp th{
+  font-weight:600;color:var(--code-ink);font-size:10.5px;
+  letter-spacing:.02em;
+}
+.cmp td:first-child{color:var(--code-ink);font-weight:500;white-space:nowrap;}
+.cmp tr:last-child td{border-bottom:0;}
+.cmp .yes{color:#86EFAC;}
+.cmp .no{color:#FCA5A5;}
+.cmp-wrap{overflow-x:auto;}
+
+/* ─── SETTLEMENT CSV ──────────────────────────── */
+.csv{
+  width:100%;border-collapse:collapse;
+  font-family:var(--mono);font-size:10px;
+  color:rgba(216,212,196,.8);direction:ltr;
+}
+.csv th,.csv td{
+  padding:5px 7px;white-space:nowrap;
+  border-bottom:1px solid rgba(216,212,196,.1);text-align:left;
+}
+.csv th{color:#A5B4FC;font-weight:500;}
+.csv .meta-col{color:#F0ABFC;}
+.csv tr:last-child td{border-bottom:0;}
+
+/* ─── SADAD ───────────────────────────────────── */
+.sadad{
+  background:var(--surface);border:1px solid var(--line);
+  border-radius:14px;overflow:hidden;max-width:620px;
+}
+.sadad-num-box{
+  padding:24px 22px;text-align:center;
+  background:linear-gradient(180deg,#FDFCF9,var(--surface));
+  border-bottom:1px solid var(--line-soft);
+}
+.sadad-num-label{font-size:12px;color:var(--muted);margin-bottom:8px;}
+.sadad-num{
+  font-family:var(--mono);font-size:27px;font-weight:500;
+  letter-spacing:.06em;direction:ltr;line-height:1.25;
+  word-break:break-all;
+}
+.sadad-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+  gap:1px;background:var(--line-soft);
+}
+.sadad-cell{background:var(--surface);padding:13px 15px;}
+.sadad-cell dt{font-size:11px;color:var(--muted);margin-bottom:3px;}
+.sadad-cell dd{font-size:12.5px;font-weight:500;}
+.sadad-cell dd.mono{font-family:var(--mono);font-size:11.5px;direction:ltr;}
+
+.status-pill{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:11.5px;font-weight:600;
+  padding:4px 10px;border-radius:20px;
+}
+.status-pill.wait{background:#FFF4D6;color:#7A5C00;}
+.status-pill.done{background:var(--ok-soft);color:var(--ok);}
+.status-pill .pulse{
+  width:6px;height:6px;border-radius:50%;background:currentColor;
+}
+
+.limits{
+  margin-top:14px;padding:13px 15px;
+  background:#FFFBEF;border:1px solid #F0DFA8;border-radius:10px;
+}
+.limits h5{font-size:11.5px;font-weight:600;color:#7A5C00;margin-bottom:7px;}
+.limits li{
+  font-size:12px;color:var(--ink-soft);line-height:1.6;
+  list-style:none;padding-inline-start:14px;position:relative;
+}
+.limits li::before{
+  content:'·';position:absolute;inset-inline-start:4px;
+  font-weight:700;color:#B8860B;
+}
+
+/* ─── WALLET (AFT) ────────────────────────────── */
+.wallet{
+  background:var(--surface);border:1px solid var(--line);
+  border-radius:14px;overflow:hidden;max-width:560px;
+}
+.wallet-top{
+  padding:22px;border-bottom:1px solid var(--line-soft);
+  background:linear-gradient(135deg,#1A1600,#312B14);color:var(--paper);
+}
+.wallet-who{font-size:12px;opacity:.6;margin-bottom:4px;}
+.wallet-bal-label{font-size:12px;opacity:.72;margin-bottom:4px;}
+.wallet-bal{
+  font-size:33px;font-weight:600;letter-spacing:-.03em;
+  font-variant-numeric:tabular-nums;line-height:1.1;
+}
+.wallet-bal small{font-size:16px;font-weight:500;opacity:.7;margin-inline-start:6px;letter-spacing:0;}
+.wallet-body{padding:20px 22px;}
+.topups{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+.topup{
+  flex:1 1 72px;border:1px solid var(--line);background:var(--surface);
+  border-radius:9px;padding:11px 8px;cursor:pointer;
+  font-family:inherit;font-size:14px;font-weight:600;color:var(--ink);
+  font-variant-numeric:tabular-nums;
+  transition:border-color .14s,background .14s;
+}
+.topup:hover{border-color:var(--muted);}
+.topup[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);}
+.topup:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
+
+.party{
+  background:#FBFAF6;border:1px solid var(--line-soft);
+  border-radius:10px;padding:13px 15px;margin-bottom:10px;
+}
+.party h5{font-size:11px;font-weight:600;color:var(--muted);margin-bottom:8px;}
+.party-row{
+  display:flex;justify-content:space-between;gap:12px;
+  font-size:12px;padding:3px 0;
+}
+.party-row span:first-child{color:var(--muted);}
+.party-row span:last-child{
+  font-family:var(--mono);font-size:11px;direction:ltr;
+  text-align:end;word-break:break-word;
+}
+
+.deny{
+  background:#FBEDEC;border:1px solid #E8A9A3;
+  border-radius:10px;padding:12px 14px;margin-bottom:14px;
+}
+.deny h5{font-size:11.5px;font-weight:600;color:var(--danger);margin-bottom:5px;}
+.deny p{font-size:12px;color:var(--ink-soft);line-height:1.6;}
+
+.win{
+  background:var(--ok-soft);border:1px solid rgba(11,138,95,.22);
+  border-radius:10px;padding:12px 14px;margin-top:14px;
+}
+.win p{font-size:12.5px;color:#076344;line-height:1.6;}
+.win strong{font-weight:600;}
+
+/* ─── HOTEL / STEP FLOW ───────────────────────── */
+.hotel{
+  background:var(--surface);border:1px solid var(--line);
+  border-radius:14px;overflow:hidden;max-width:620px;
+}
+.hotel-top{
+  padding:20px 22px;border-bottom:1px solid var(--line-soft);
+  display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;
+}
+.hotel-stay{font-size:12.5px;color:var(--muted);margin-top:3px;}
+.flow{padding:4px 0;}
+.step{
+  display:flex;gap:13px;padding:15px 22px;
+  border-bottom:1px solid var(--line-soft);
+}
+.step:last-child{border-bottom:0;}
+.step-num{
+  width:24px;height:24px;border-radius:50%;flex-shrink:0;
+  background:var(--line-soft);color:var(--muted);
+  display:grid;place-items:center;
+  font-size:11.5px;font-weight:600;margin-top:1px;
+}
+.step.done .step-num{background:var(--ok-soft);color:var(--ok);}
+.step.now .step-num{background:var(--accent);color:#fff;}
+.step-body{flex:1;min-width:0;}
+.step-title{
+  font-size:13.5px;font-weight:600;margin-bottom:3px;
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+}
+.step-amount{
+  font-family:var(--mono);font-size:12px;color:var(--ink-soft);
+  font-weight:500;direction:ltr;
+}
+.step-what{font-size:12.5px;color:var(--ink-soft);line-height:1.6;}
+.step-side{
+  font-size:10.5px;font-weight:600;
+  padding:2px 7px;border-radius:5px;
+  background:var(--line-soft);color:var(--muted);white-space:nowrap;
+}
+.step-side.srv{background:var(--accent-soft);color:var(--accent);}
+
+/* ─── CURRENCY SWITCH ─────────────────────────── */
+.ccy-bar{
+  padding:12px 20px;border-bottom:1px solid var(--line-soft);
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+}
+.ccy-label{font-size:11.5px;font-weight:600;color:var(--muted);}
+.ccy-list{display:flex;gap:3px;overflow-x:auto;padding-bottom:1px;}
+.ccy{
+  border:1px solid var(--line);background:var(--surface);
+  border-radius:7px;padding:5px 10px;cursor:pointer;
+  font-family:var(--mono);font-size:11.5px;font-weight:500;
+  color:var(--ink-soft);flex-shrink:0;
+  transition:border-color .14s,background .14s,color .14s;
+}
+.ccy:hover{border-color:var(--muted);color:var(--ink);}
+.ccy[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper);}
+.ccy:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
+.ccy-note{
+  width:100%;font-size:11px;color:var(--muted);line-height:1.6;
+}
+.ccy-note strong{color:var(--ink-soft);font-weight:600;}
+
+/* ─── 3DS EXPLAINER ───────────────────────────── */
+.tds{
+  margin:0 20px 20px;padding:12px 15px;
+  background:#FBFAF6;border:1px solid var(--line-soft);border-radius:10px;
+}
+.tds h4{font-size:11.5px;font-weight:600;color:var(--ink-soft);margin-bottom:6px;}
+.tds p{font-size:11.5px;color:var(--muted);line-height:1.6;}
+.tds code{font-family:var(--mono);font-size:11px;}
+
+/* ─── FOOTER ──────────────────────────────────── */
+.foot{
+  border-top:1px solid var(--line);
+  padding:18px 20px calc(22px + env(safe-area-inset-bottom,0px));
+  margin-top:10px;
+}
+.foot-inner{
+  max-width:1400px;margin:0 auto;
+  font-size:11.5px;color:var(--muted);line-height:1.6;
+  display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;
+}
+.foot-mark{font-weight:600;color:var(--ink-soft);}
+
+.toast{
+  position:fixed;bottom:22px;left:50%;transform:translateX(-50%);
+  background:var(--ink);color:var(--paper);
+  padding:9px 18px;border-radius:9px;
+  font-size:12.5px;font-weight:500;
+  opacity:0;pointer-events:none;transition:opacity .18s;
+  z-index:300;white-space:nowrap;
+}
+.toast.show{opacity:1;}
+.hide{display:none !important;}
+
+/* ─── MOBILE PASS — presenting from a phone at 390px ───────────── */
+@media(max-width:760px){
+  .topbar{padding:0 14px;}
+  .topbar-inner{min-height:52px;gap:10px;padding:8px 0;}
+  .brand-sub{display:none;}
+  .demo-chip{font-size:9.5px;padding:3px 7px;}
+
+  /* scene tabs drop to their own full-width scrolling row */
+  .tabs{
+    order:10;width:100%;
+    overflow-x:auto;-webkit-overflow-scrolling:touch;
+    scrollbar-width:none;border-radius:9px;
+  }
+  .tabs::-webkit-scrollbar{display:none;}
+  .tab{flex-shrink:0;padding:6px 12px;font-size:12.5px;}
+  .topbar-right{gap:6px;}
+  .ghost-btn{padding:6px 10px;font-size:12px;}
+  .ghost-btn .dot{display:none;}
+
+  .shell{padding:18px 14px 40px;gap:18px;}
+  .stage-head h1{font-size:21px;}
+  .stage-head p{font-size:13.5px;}
+
+  /* personas stack — three rows read better than three squeezed columns */
+  .persona-row{grid-template-columns:1fr;gap:8px;}
+  .persona{flex-direction:row;align-items:flex-start;gap:11px;padding:12px 14px;}
+  .persona-icon{margin-bottom:0;margin-top:1px;}
+  .persona-body{min-width:0;}
+
+  .store,.invoice,.sadad,.wallet,.hotel{border-radius:12px;}
+  .store-bar{padding:13px 15px;}
+  .goods{grid-template-columns:repeat(2,1fr);}
+  .good{padding:13px;}
+  .good-art{height:62px;font-size:25px;}
+  .good-add{opacity:1;}            /* no hover on touch */
+  .cart{padding:15px;}
+  .ccy-bar{padding:11px 15px;}
+
+  .line{gap:8px;}
+  .line-name{font-size:13px;}
+  .line-total{min-width:62px;font-size:13px;}
+  .total-row.grand{font-size:16.5px;}
+
+  .inv-head,.inv-amount{padding:18px 16px;}
+  .inv-body{padding:16px;}
+  .inv-foot{padding:0 16px 18px;}
+  .inv-amount-value{font-size:32px;}
+  .inv-ref{text-align:start;}
+
+  .sadad-num-box{padding:20px 16px;}
+  .sadad-num{font-size:21px;letter-spacing:.04em;}
+  .sadad-grid{grid-template-columns:1fr 1fr;}
+
+  .wallet-top,.wallet-body{padding:18px 16px;}
+  .wallet-bal{font-size:28px;}
+  .topup{flex:1 1 60px;padding:10px 6px;font-size:13px;}
+
+  .hotel-top{padding:17px 16px;}
+  .step{padding:13px 16px;gap:11px;}
+
+  .result{padding:26px 18px;}
+  .meta-row{flex-direction:column;gap:2px;}
+  .meta-val{text-align:start;}
+
+  /* checkout sheet becomes a true bottom sheet */
+  .sheet-bg{padding:0;align-items:flex-end;}
+  .sheet{
+    max-width:none;border-radius:15px 15px 0 0;margin:0;
+    max-height:94vh;max-height:94dvh;overflow-y:auto;
+  }
+  .sheet-head{position:sticky;top:0;background:var(--surface);z-index:2;}
+  .sheet-body{padding:16px;}
+  .testcards{margin:0 16px 16px;}
+  .tds{margin:0 16px 16px;}
+
+  /* the developer slide-over sits under the scene, full width */
+  .devpanel{border-radius:12px;}
+  .dev-head{padding:11px 14px;}
+  .dev-body{padding:13px 14px;}
+  .dev-tabs{padding:7px 11px;}
+  pre{font-size:11px;}
+  .cmp{font-size:10.5px;}
+  .cmp td:first-child{white-space:normal;}
+
+  .foot{padding:16px 14px calc(18px + env(safe-area-inset-bottom,0px));}
+  .toast{left:14px;right:14px;transform:none;white-space:normal;text-align:center;}
+}
+
+/* very narrow phones — 360px and under */
+@media(max-width:390px){
+  .goods{grid-template-columns:1fr 1fr;}
+  .good-name{font-size:12.5px;}
+  .brand-name{font-size:13px;}
+  .sadad-num{font-size:18px;}
+  .sadad-grid{grid-template-columns:1fr;}
+}
+
+@media(prefers-reduced-motion:reduce){
+  *{transition:none !important;animation:none !important;}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <div class="brand-mark"><img id="brandLogo" src="data:image/png;base64,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" alt=""></div>
+      <div>
+        <div class="brand-name" data-t="brandName">Moyasar Payments</div>
+        <div class="brand-sub" data-t="brandSub">Live integration demo</div>
+      </div>
+    </div>
+    <span class="demo-chip" data-t="testChip">TEST MODE</span>
+
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" aria-selected="true" data-scene="store" data-t="tabStore">Online store</button>
+      <button class="tab" role="tab" aria-selected="false" data-scene="invoice" data-t="tabInvoice">Payment link</button>
+      <button class="tab" role="tab" aria-selected="false" data-scene="sadad" data-t="tabSadad">SADAD bill</button>
+      <button class="tab" role="tab" aria-selected="false" data-scene="wallet" data-t="tabWallet">Wallet top-up</button>
+      <button class="tab" role="tab" aria-selected="false" data-scene="hotel" data-t="tabHotel">Hotel deposit</button>
+    </div>
+
+    <div class="topbar-right">
+      <button class="ghost-btn" id="langBtn">العربية</button>
+      <button class="ghost-btn" id="devBtn" aria-pressed="false">
+        <span class="dot"></span><span data-t="devToggle">Developer view</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main class="shell" id="shell">
+  <div class="stage">
+
+    <!-- live-key refusal: this demo must never touch real money -->
+    <div class="blocked hide" id="blocked">
+      <h3 data-t="blockedTitle">Live key detected — demo disabled</h3>
+      <p data-t="blockedBody">The publishable key in this file starts with <code>pk_live_</code>, which would take real money from whoever taps Pay. Nothing on this page will initialise until it is replaced with a test key (<code>pk_test_…</code>).</p>
+    </div>
+
+    <!-- setup notice -->
+    <div class="notice hide" id="notice">
+      <h3 data-t="noticeTitle">Add your publishable key to start</h3>
+      <p data-t="noticeBody">Open this file in a text editor and replace <code>PK_TEST_KEY_HERE</code> near the top of the script with your Moyasar test publishable key (<code>pk_test_…</code>). Save, re-upload, and the checkout goes live.</p>
+    </div>
+
+    <!-- persona entry points -->
+    <div class="personas" id="personas">
+      <div class="personas-label" data-t="personaLabel">Who is in the room?</div>
+      <div class="persona-row">
+        <button class="persona" data-persona="owner" aria-pressed="false">
+          <span class="persona-icon">🏪</span>
+          <span class="persona-body">
+            <span class="persona-name" data-t="pOwnerName">Business owner</span>
+            <span class="persona-what" data-t="pOwnerWhat">Checkout speed, Apple Pay, payment links</span>
+          </span>
+        </button>
+        <button class="persona" data-persona="developer" aria-pressed="false">
+          <span class="persona-icon">⌨️</span>
+          <span class="persona-body">
+            <span class="persona-name" data-t="pDevName">Developer</span>
+            <span class="persona-what" data-t="pDevWhat">API, webhooks, test mode, payment intents</span>
+          </span>
+        </button>
+        <button class="persona" data-persona="finance" aria-pressed="false">
+          <span class="persona-icon">📊</span>
+          <span class="persona-body">
+            <span class="persona-name" data-t="pFinName">Finance</span>
+            <span class="persona-what" data-t="pFinWhat">Settlement, reconciliation, refunds vs voids</span>
+          </span>
+        </button>
+      </div>
+    </div>
+
+    <!-- result -->
+    <div class="result hide" id="result">
+      <div class="result-mark" id="resultMark"></div>
+      <h2 id="resultTitle"></h2>
+      <p id="resultText"></p>
+      <div class="result-meta" id="resultMeta"></div>
+      <button class="pay-btn" id="resetBtn" style="margin-top:0" data-t="runAgain">Run the demo again</button>
+    </div>
+
+    <!-- STORE -->
+    <section id="sceneStore">
+      <div class="stage-head">
+        <h1 data-t="storeHead">A customer checks out</h1>
+        <p data-t="storeSub">Add a few items, then pay with a test card. This is the same Moyasar form your customers would see — nothing is simulated.</p>
+      </div>
+
+      <div class="store">
+        <div class="store-bar">
+          <div class="store-id">
+            <div class="store-avatar" id="storeAvatar">M</div>
+            <div>
+              <input class="store-name" id="storeName" value="Mawj Coffee" spellcheck="false" aria-label="Merchant name">
+              <div class="store-tag" data-t="storeTag">Riyadh · Online orders</div>
+            </div>
+          </div>
+          <div class="methods">
+            <span class="method">mada</span>
+            <span class="method">VISA</span>
+            <span class="method">Mastercard</span>
+            <span class="method">UnionPay</span>
+            <span class="method">Apple&nbsp;Pay</span>
+            <span class="method">Google&nbsp;Pay</span>
+            <span class="method">Samsung&nbsp;Pay</span>
+            <span class="method">STC&nbsp;Pay</span>
+          </div>
+        </div>
+
+        <!-- multi-currency -->
+        <div class="ccy-bar">
+          <span class="ccy-label" data-t="ccyLabel">Display currency</span>
+          <div class="ccy-list" id="ccyList"></div>
+          <div class="ccy-note" id="ccyNote"></div>
+        </div>
+
+        <div class="goods" id="goods"></div>
+
+        <div class="cart">
+          <div class="cart-title" data-t="cartTitle">Order summary</div>
+          <div id="cartLines"></div>
+          <div class="totals hide" id="totals">
+            <div class="total-row">
+              <span data-t="subtotal">Subtotal</span>
+              <span id="subtotal">0.00 SAR</span>
+            </div>
+            <div class="total-row" id="vatRow">
+              <span data-t="vat">VAT 15%</span>
+              <span id="vat">0.00 SAR</span>
+            </div>
+            <div class="total-row grand">
+              <span data-t="total">Total</span>
+              <span id="grand">0.00 SAR</span>
+            </div>
+          </div>
+          <div class="opts" id="optsStore"></div>
+          <button class="pay-btn" id="storePay" disabled data-t="payNow">Pay now</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- INVOICE -->
+    <section id="sceneInvoice" class="hide">
+      <div class="stage-head">
+        <h1 data-t="invHead">A customer opens a payment link</h1>
+        <p data-t="invSub">Send this by WhatsApp, email or SMS. No website, no integration — the customer taps and pays.</p>
+      </div>
+
+      <div class="invoice">
+        <div class="inv-head">
+          <div>
+            <div class="inv-from" data-t="invFrom">Invoice from</div>
+            <div class="inv-issuer" id="invIssuer">Nakhla Interiors</div>
+          </div>
+          <div class="inv-ref">
+            <div class="inv-ref-num" id="invRef">INV-40318</div>
+            <div class="inv-due" data-t="invDue">Due on receipt</div>
+          </div>
+        </div>
+
+        <div class="inv-amount">
+          <div class="inv-amount-label" data-t="invAmountLabel">Amount due</div>
+          <div class="inv-amount-value">4,312.50<small>SAR</small></div>
+        </div>
+
+        <div class="inv-body">
+          <div class="inv-line"><span data-t="invItem1">Design consultation — 6 hours</span><span>2,400.00</span></div>
+          <div class="inv-line"><span data-t="invItem2">Site survey and measurement</span><span>950.00</span></div>
+          <div class="inv-line"><span data-t="invItem3">3D visualisation</span><span>400.00</span></div>
+          <div class="inv-line"><span data-t="vat">VAT 15%</span><span>562.50</span></div>
+        </div>
+
+        <div class="inv-foot">
+          <div class="opts" id="optsInv" style="margin-top:0;padding-top:0;border-top:0"></div>
+          <button class="pay-btn" id="invPay" data-t="payInvoice">Pay 4,312.50 SAR</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SADAD BILL -->
+    <section id="sceneSadad" class="hide">
+      <div class="stage-head">
+        <h1 data-t="sadadHead">A business pays without a card</h1>
+        <p data-t="sadadSub">Issue a SADAD number and the customer pays it from any Saudi bank app or ATM. This is how finance departments settle invoices — no card, no gateway page, no chargebacks.</p>
+      </div>
+
+      <div class="sadad">
+        <div class="inv-head">
+          <div>
+            <div class="inv-from" data-t="invFrom">Invoice from</div>
+            <div class="inv-issuer" id="sadadIssuer">Mawj Coffee</div>
+          </div>
+          <div class="inv-ref">
+            <div class="inv-ref-num">INV-B2B-2291</div>
+            <div class="inv-due" id="sadadStatusWrap">
+              <span class="status-pill wait" id="sadadPill">
+                <span class="pulse"></span><span id="sadadStatus" data-t="sadadInitiated">initiated</span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="sadad-num-box">
+          <div class="sadad-num-label" data-t="sadadNumLabel">SADAD bill number</div>
+          <div class="sadad-num" id="sadadNum">—</div>
+          <div class="ccy-note" style="margin-top:8px;text-align:center" data-t="sadadSample">Sample number — your server issues the real one.</div>
+        </div>
+
+        <dl class="sadad-grid">
+          <div class="sadad-cell">
+            <dt data-t="sadadAmount">Amount due</dt>
+            <dd id="sadadAmount">18,400.00 SAR</dd>
+          </div>
+          <div class="sadad-cell">
+            <dt data-t="sadadExpiry">Expires</dt>
+            <dd class="mono" id="sadadExpiry">—</dd>
+          </div>
+          <div class="sadad-cell">
+            <dt data-t="sadadPayFrom">Pay from</dt>
+            <dd data-t="sadadPayFromV">Any Saudi bank app or ATM</dd>
+          </div>
+        </dl>
+
+        <div class="inv-foot" style="padding-top:18px">
+          <button class="pay-btn" id="sadadIssue" data-t="sadadIssueBtn">Issue the SADAD bill</button>
+          <button class="pay-btn hide" id="sadadPaid" style="margin-top:9px;background:var(--ok)" data-t="sadadPaidBtn">Customer pays it at their bank</button>
+
+          <div class="limits">
+            <h5 data-t="sadadLimitsTitle">Three limits worth saying out loud</h5>
+            <ul>
+              <li data-t="sadadLimit1">SAR only — no other currency.</li>
+              <li data-t="sadadLimit2">The bill expires in 29 days at most.</li>
+              <li data-t="sadadLimit3">No refund, no capture, no void. Money comes back by bank transfer.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- WALLET TOP-UP (AFT) -->
+    <section id="sceneWallet" class="hide">
+      <div class="stage-head">
+        <h1 data-t="walletHead">A customer tops up a wallet</h1>
+        <p data-t="walletSub">Loading a stored balance is not a purchase — the card networks class it as an Account Funding Transaction, and it needs the sender and recipient attached to the payment.</p>
+      </div>
+
+      <div class="wallet">
+        <div class="wallet-top">
+          <div class="wallet-who" id="walletBrand">Mawj Coffee</div>
+          <div class="wallet-bal-label" data-t="walletBalLabel">Wallet balance</div>
+          <div class="wallet-bal">40.00<small data-t="currency">SAR</small></div>
+        </div>
+
+        <div class="wallet-body">
+          <div class="cart-title" data-t="walletPick">Add to balance</div>
+          <div class="topups" id="topups"></div>
+
+          <div class="deny">
+            <h5 data-t="aftDenyTitle">Cannot fund an AFT</h5>
+            <p data-t="aftDenyBody">STC Pay and Google Pay do not support Account Funding Transactions, so they are left out of <code>methods</code> on purpose. Card, Apple Pay and Samsung Pay only. The merchant entity also has to be enabled for AFT or the API rejects the payment.</p>
+          </div>
+
+          <div class="party">
+            <h5 data-t="aftSender">sender — required</h5>
+            <div class="party-row"><span>first_name</span><span>Yousef</span></div>
+            <div class="party-row"><span>last_name</span><span>Al-Harbi</span></div>
+            <div class="party-row"><span>address</span><span>Olaya St, Riyadh, SA</span></div>
+            <div class="party-row"><span>id_type</span><span>NTID</span></div>
+            <div class="party-row"><span>id</span><span>10xxxxxxxx</span></div>
+            <div class="party-row"><span>phone_number</span><span>+9665xxxxxxxx</span></div>
+          </div>
+
+          <div class="party">
+            <h5 data-t="aftRecipient">recipient — required</h5>
+            <div class="party-row"><span>first_name</span><span>Yousef</span></div>
+            <div class="party-row"><span>last_name</span><span>Al-Harbi</span></div>
+            <div class="party-row"><span>address</span><span>Olaya St, Riyadh, SA</span></div>
+          </div>
+
+          <div class="opts" id="optsWallet"></div>
+          <button class="pay-btn" id="walletPay" data-t="walletPayBtn">Top up</button>
+
+          <div class="win">
+            <p data-t="aftWin">One SAR 100 top-up carries one transaction fee. Ten SAR 10 purchases from that balance carry none.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOTEL DEPOSIT -->
+    <section id="sceneHotel" class="hide">
+      <div class="stage-head">
+        <h1 data-t="hotelHead">A hotel holds a deposit, then charges less</h1>
+        <p data-t="hotelSub">Authorise on arrival, capture what the guest actually spent, release the rest. The same pattern covers no-show policies, car hire and anything quoted before the final bill is known.</p>
+      </div>
+
+      <div class="hotel">
+        <div class="hotel-top">
+          <div>
+            <div class="inv-issuer" id="hotelName">Mawj Residences</div>
+            <div class="hotel-stay" data-t="hotelStay">2 nights · Deluxe king · Riyadh</div>
+          </div>
+          <div class="inv-ref">
+            <div class="inv-ref-num">BKG-77104</div>
+            <div class="inv-due" data-t="hotelAuthLabel">Deposit held</div>
+          </div>
+        </div>
+
+        <div class="flow" id="hotelFlow"></div>
+
+        <div class="inv-foot" style="padding-top:4px">
+          <button class="pay-btn" id="hotelPay" data-t="hotelAuthBtn">Authorise 500.00 SAR</button>
+          <button class="pay-btn hide" id="hotelCapture" style="margin-top:9px" data-t="hotelCaptureBtn">Capture 380.00 SAR (server-side)</button>
+          <div class="limits">
+            <h5 data-t="hotelWindowTitle">The constraint that bites real bookings</h5>
+            <ul>
+              <li data-t="hotelWindow1">A mada authorisation must be captured within 14 days. A room booked three months ahead cannot be authorised today and captured at check-in.</li>
+              <li data-t="hotelWindow2">Other schemes may allow longer — confirm the window per scheme before you design the booking flow.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- DEV PANEL -->
+  <aside class="devpanel hide" id="devpanel">
+    <div class="dev-head">
+      <div class="dev-title"><span class="live-dot"></span><span data-t="devLive">Live request</span></div>
+    </div>
+    <div class="dev-tabstrip">
+      <div class="dev-tabs" role="tablist">
+        <button class="dev-tab" role="tab" aria-selected="true"  data-dev="init"       data-t="dtForm">Form</button>
+        <button class="dev-tab" role="tab" aria-selected="false" data-dev="metadata"   data-t="dtMetadata">Metadata</button>
+        <button class="dev-tab" role="tab" aria-selected="false" data-dev="token"      data-t="dtToken">Token</button>
+        <button class="dev-tab" role="tab" aria-selected="false" data-dev="capture"    data-t="dtCapture">Capture</button>
+        <button class="dev-tab" role="tab" aria-selected="false" data-dev="voidrefund" data-t="dtVoidRefund">Void vs refund</button>
+        <button class="dev-tab" role="tab" aria-selected="false" data-dev="webhooks"   data-t="dtWebhooks">Webhooks</button>
+        <button class="dev-tab" role="tab" aria-selected="false" data-dev="settlement" data-t="dtSettlement">Settlement</button>
+        <button class="dev-tab" role="tab" aria-selected="false" data-dev="splits"     data-t="dtSplits">Splits</button>
+        <button class="dev-tab" role="tab" aria-selected="false" data-dev="intents"    data-t="dtIntents">Intents</button>
+        <button class="dev-tab" role="tab" aria-selected="false" data-dev="wallets"    data-t="dtWallets">Wallets</button>
+        <button class="dev-tab" role="tab" aria-selected="false" data-dev="callback"   data-t="dtCallback">Callback</button>
+        <button class="dev-tab" role="tab" aria-selected="false" data-dev="verify"     data-t="dtVerify">Verify</button>
+      </div>
+    </div>
+    <div class="dev-body" id="devBody"></div>
+  </aside>
+</main>
+
+<!-- CHECKOUT SHEET -->
+<div class="sheet-bg" id="sheetBg">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <div class="sheet-head">
+      <div>
+        <div class="sheet-title" id="sheetTitle" data-t="checkout">Checkout</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span class="sheet-amount" id="sheetAmount"></span>
+        <button class="sheet-close" id="sheetClose" aria-label="Close">✕</button>
+      </div>
+    </div>
+    <div class="sheet-body"><div class="mysr-form" id="mysrForm"></div></div>
+    <div class="testcards">
+      <h4 data-t="testCardsTitle">Test cards — click to copy</h4>
+      <div class="tc"><span class="tc-label" data-t="tcSuccess">Successful payment</span><span class="tc-num" data-copy="4111111111111111">4111 1111 1111 1111</span></div>
+      <div class="tc"><span class="tc-label" data-t="tcSuccessMc">Successful payment</span><span class="tc-num" data-copy="5500000000000004">5500 0000 0000 0004</span></div>
+      <div class="tc"><span class="tc-label" data-t="tcDecline">Declined payment</span><span class="tc-num" data-copy="4000000000000002">4000 0000 0000 0002</span></div>
+      <div class="tc hide" id="tc3ds"><span class="tc-label" data-t="tc3ds">3-D Secure challenge</span><span class="tc-num" id="tc3dsNum" data-copy=""></span></div>
+      <div class="tc" style="margin-top:6px;padding-top:7px;border-top:1px solid rgba(107,95,230,.16)">
+        <span class="tc-label" data-t="tcRest">Any future expiry, any CVC, any name</span>
+      </div>
+    </div>
+    <div class="tds">
+      <h4 data-t="tdsTitle">What happens on a 3-D Secure card</h4>
+      <p data-t="tdsBody">Moyasar returns the payment with <code>source.transaction_url</code> and sends the customer to the bank's own challenge page — an SMS code or the bank app. The form does this for you; there is nothing to build. The customer comes back to your <code>callback_url</code> afterwards, which is why the order must be confirmed from the server and never from the URL.</p>
+    </div>
+  </div>
+</div>
+
+<footer class="foot">
+  <div class="foot-inner">
+    <span class="foot-mark" data-t="footMark">Unofficial sales demo</span>
+    <span data-t="footBody">— not an official Moyasar product page. Test mode only; no real payments.</span>
+  </div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════════
+   1. YOUR MOYASAR TEST KEY — paste it here
+   ══════════════════════════════════════════════ */
+const PUBLISHABLE_KEY = 'pk_test_6v9CibtjzerppVxsfnqC2a1tvB13yuxBboFCBbyB';
+/* ════════════════════════════════════════════ */
+
+/* ══════════════════════════════════════════════
+   3-D Secure test card
+   VERIFY: take the 3DS challenge card number from
+   https://docs.moyasar.com/guides/testing/test-cards
+   and paste it between the quotes. The row then appears
+   in the test-card sheet. Left empty so the demo never
+   shows a card number that was guessed rather than read.
+   ══════════════════════════════════════════════ */
+const THREE_DS_CARD = '';
+
+/* ── currencies ──────────────────────────────────
+   Multi-currency is aggregation-only and off by default.
+   exp = minor-unit exponent. BHD and KWD are 3-decimal
+   currencies (1000 fils), the rest are 2.
+   VERIFY: that Moyasar expects 3-decimal minor units for
+   BHD/KWD amounts rather than 2 — docs.moyasar.com,
+   multi-currency guide.                                 */
+const CCY = {
+  SAR:{ exp:2, en:'SAR', ar:'ريال'        },
+  AED:{ exp:2, en:'AED', ar:'درهم'        },
+  BHD:{ exp:3, en:'BHD', ar:'دينار بحريني' },
+  KWD:{ exp:3, en:'KWD', ar:'دينار كويتي'  },
+  QAR:{ exp:2, en:'QAR', ar:'ريال قطري'    },
+  USD:{ exp:2, en:'USD', ar:'دولار'        },
+};
+
+/* The merchant's own price list per market — these are NOT
+   converted at any exchange rate, and nothing here implies
+   a Moyasar rate. Amounts are in each currency's minor unit. */
+const CATALOGUE = [
+  { id:'a', art:'☕', en:'Filter coffee 250g', ar:'قهوة فلتر ٢٥٠ جم',
+    price:{ SAR:1800,  AED:1900,  BHD:1900,  KWD:1500, QAR:1900,  USD:500  } },
+  { id:'b', art:'🫘', en:'Espresso beans 1kg', ar:'حبوب إسبريسو ١ كجم',
+    price:{ SAR:5500,  AED:5900,  BHD:5900,  KWD:4500, QAR:5800,  USD:1500 } },
+  { id:'c', art:'🍰', en:'Date cake slice', ar:'قطعة كيك التمر',
+    price:{ SAR:2400,  AED:2500,  BHD:2500,  KWD:2000, QAR:2500,  USD:700  } },
+  { id:'d', art:'🥤', en:'Iced latte', ar:'لاتيه مثلج',
+    price:{ SAR:1600,  AED:1700,  BHD:1700,  KWD:1300, QAR:1700,  USD:450  } },
+  { id:'e', art:'🎁', en:'Gift box', ar:'صندوق هدايا',
+    price:{ SAR:12000, AED:12900, BHD:12900, KWD:9900, QAR:12900, USD:3200 } },
+  { id:'f', art:'🫖', en:'Pour-over kit', ar:'طقم تحضير القهوة',
+    price:{ SAR:8900,  AED:9500,  BHD:9500,  KWD:7500, QAR:9500,  USD:2400 } },
+];
+
+/* ── scene fixtures ── */
+const TOPUPS       = [5000, 10000, 20000, 50000];   // halalas
+const HOTEL_AUTH   = 50000;                          // SAR 500.00 held
+const HOTEL_TAKE   = 38000;                          // SAR 380.00 captured
+const SADAD_AMOUNT = 1840000;                        // SAR 18,400.00
+const SADAD_DAYS   = 29;                             // docs: 29 days maximum
+
+/* AFT sender/recipient. Both objects are required together —
+   passing one alone is a configuration error. */
+const AFT_SENDER = {
+  first_name:'Yousef', last_name:'Al-Harbi',
+  address:'Olaya St, Riyadh, SA',
+  id_type:'NTID', id:'1000000000', phone_number:'+966500000000',
+};
+const AFT_RECIPIENT = {
+  first_name:'Yousef', last_name:'Al-Harbi',
+  address:'Olaya St, Riyadh, SA',
+};
+
+const T = {
+  en:{
+    brandName:'Moyasar Payments', brandSub:'Live integration demo',
+    testChip:'TEST MODE', tabStore:'Online store', tabInvoice:'Payment link',
+    devToggle:'Developer view', devLive:'Live request',
+    noticeTitle:'Add your publishable key to start',
+    noticeBody:'Open this file in a text editor and replace <code>PK_TEST_KEY_HERE</code> near the top of the script with your Moyasar test publishable key (<code>pk_test_…</code>). Save, re-upload, and the checkout goes live.',
+    storeHead:'A customer checks out',
+    storeSub:'Add a few items, then pay with a test card. This is the same Moyasar form your customers would see — nothing is simulated.',
+    storeTag:'Riyadh · Online orders',
+    cartTitle:'Order summary', subtotal:'Subtotal', vat:'VAT 15%', total:'Total',
+    payNow:'Pay now', cartEmpty:'Pick something from the shelf above',
+    invHead:'A customer opens a payment link',
+    invSub:'Send this by WhatsApp, email or SMS. No website, no integration — the customer taps and pays.',
+    invFrom:'Invoice from', invDue:'Due on receipt', invAmountLabel:'Amount due',
+    invItem1:'Design consultation — 6 hours', invItem2:'Site survey and measurement',
+    invItem3:'3D visualisation', payInvoice:'Pay 4,312.50 SAR',
+    checkout:'Checkout',
+    testCardsTitle:'Test cards — click to copy',
+    tcSuccess:'Successful payment', tcSuccessMc:'Successful payment',
+    tcDecline:'Declined payment', tcRest:'Any future expiry, any CVC, any name',
+    paidTitle:'Payment received', paidText:'The customer is back on your site and the order is confirmed. This transaction is now visible in the Moyasar dashboard.',
+    failTitle:'Payment not completed', failText:'The card was declined or the customer cancelled. Nothing was charged.',
+    runAgain:'Run the demo again',
+    mId:'Payment ID', mStatus:'Status', mAmount:'Amount', mMethod:'Method',
+    copied:'Card number copied', keyMissing:'Add your publishable key first',
+    optMetadata:'Metadata',
+    metaTitle:'Attached to this payment',
+    metaNote:'Searchable in the Moyasar dashboard. Edit these and watch the config update.',
+    optsLabel:'Payment options',
+    optSave:'Save card (tokenize)',
+    optManual:'Authorize only',
+    optApplePay:'Apple Pay',
+    saveNote:'Adds <strong>credit_card.save_card: true</strong>. The payment response returns a reusable token — the basis for recurring billing.',
+    manualNote:'Adds <strong>credit_card.manual: true</strong>. Funds are held, not taken. Capture runs later from your server.',
+    applePayNote:'Only renders in <strong>Safari on Apple devices</strong>, and this domain must be registered in the Moyasar dashboard first.',
+    mToken:'Saved card token',
+
+    /* ── scenes ── */
+    tabSadad:'SADAD bill', tabWallet:'Wallet top-up', tabHotel:'Hotel deposit',
+
+    /* ── live-key refusal ── */
+    blockedTitle:'Live key detected — demo disabled',
+    blockedBody:'The publishable key in this file starts with <code>pk_live_</code>, which would take real money from whoever taps Pay. Nothing on this page will initialise until it is replaced with a test key (<code>pk_test_…</code>).',
+    blockedToast:'Live key — the demo is disabled',
+
+    /* ── personas ── */
+    personaLabel:'Who is in the room?',
+    pOwnerName:'Business owner', pOwnerWhat:'Checkout speed, Apple Pay, payment links',
+    pDevName:'Developer',        pDevWhat:'API, webhooks, test mode, payment intents',
+    pFinName:'Finance',          pFinWhat:'Settlement, reconciliation, refunds vs voids',
+
+    /* ── multi-currency ── */
+    ccyLabel:'Display currency',
+    ccyNoteSar:'Each currency is the merchant’s own price list for that market — not a converted rate.',
+    ccyNoteOther:'<strong>Aggregation accounts only</strong>, and off by default. Moyasar always settles to the merchant in <strong>SAR</strong>, at a fixed Moyasar rate that includes an FX margin. Cards only — mada, Visa, Mastercard. Refunds are issued in the original currency.',
+    vatSarOnly:'VAT shown for SAR. Cross-border tax treatment is the merchant’s own to set.',
+
+    /* ── SADAD ── */
+    sadadHead:'A business pays without a card',
+    sadadSub:'Issue a SADAD number and the customer pays it from any Saudi bank app or ATM. This is how finance departments settle invoices — no card, no gateway page, no chargebacks.',
+    sadadNumLabel:'SADAD bill number',
+    sadadSample:'Sample number — your server issues the real one.',
+    sadadAmount:'Amount due', sadadExpiry:'Expires',
+    sadadPayFrom:'Pay from', sadadPayFromV:'Any Saudi bank app or ATM',
+    sadadInitiated:'initiated', sadadPaidStatus:'paid',
+    sadadIssueBtn:'Issue the SADAD bill',
+    sadadPaidBtn:'Customer pays it at their bank',
+    sadadIssuedToast:'Bill issued — status initiated',
+    sadadPaidToast:'Paid — the webhook fires payment_paid',
+    sadadLimitsTitle:'Three limits worth saying out loud',
+    sadadLimit1:'SAR only — no other currency.',
+    sadadLimit2:'The bill expires in 29 days at most.',
+    sadadLimit3:'No refund, no capture, no void. Money comes back by bank transfer.',
+
+    /* ── wallet top-up / AFT ── */
+    walletHead:'A customer tops up a wallet',
+    walletSub:'Loading a stored balance is not a purchase — the card networks class it as an Account Funding Transaction, and it needs the sender and recipient attached to the payment.',
+    walletBalLabel:'Wallet balance', walletPick:'Add to balance',
+    walletPayBtn:'Top up',
+    aftDenyTitle:'Cannot fund an AFT',
+    aftDenyBody:'STC Pay and Google Pay do not support Account Funding Transactions, so they are left out of <code>methods</code> on purpose. Card, Apple Pay and Samsung Pay only. The merchant entity also has to be enabled for AFT, or the API rejects the payment.',
+    aftSender:'sender — required', aftRecipient:'recipient — required',
+    aftWin:'One SAR 100 top-up carries one transaction fee. Ten SAR 10 purchases from that balance carry none.',
+
+    /* ── hotel deposit ── */
+    hotelHead:'A hotel holds a deposit, then charges less',
+    hotelSub:'Authorise on arrival, capture what the guest actually spent, release the rest. The same pattern covers no-show policies, car hire and anything quoted before the final bill is known.',
+    hotelStay:'2 nights · Deluxe king · Riyadh',
+    hotelAuthLabel:'Deposit held',
+    hotelAuthBtn:'Authorise 500.00 SAR',
+    hotelCaptureBtn:'Capture 380.00 SAR (server-side)',
+    hotelWindowTitle:'The constraint that bites real bookings',
+    hotelWindow1:'A mada authorisation must be captured within 14 days. A room booked three months ahead cannot be authorised today and captured at check-in.',
+    hotelWindow2:'Other schemes may allow longer — confirm the window per scheme before you design the booking flow.',
+    sideBrowser:'browser', sideServer:'server',
+    hStep1T:'Authorise the deposit',
+    hStep1W:'<strong>manual: true</strong> on the card source. The guest sees the hold on their statement; no money moves. Status becomes <strong>authorized</strong>.',
+    hStep2T:'Capture what they spent',
+    hStep2W:'Minibar and late checkout came to 380.00. Capture that amount and nothing more — a capture can never exceed what was authorised. Status becomes <strong>captured</strong>.',
+    hStep3T:'The remainder is released',
+    hStep3W:'Capturing less than the authorised amount releases the difference. Nothing to call, nothing to refund, no fee.',
+    hotelCapturedToast:'Captured 380.00 — 120.00 released',
+
+    /* ── 3DS ── */
+    tc3ds:'3-D Secure challenge',
+    tdsTitle:'What happens on a 3-D Secure card',
+    tdsBody:'Moyasar returns the payment with <code>source.transaction_url</code> and sends the customer to the bank’s own challenge page — an SMS code or the bank app. The form does this for you; there is nothing to build. The customer comes back to your <code>callback_url</code> afterwards, which is why the order must be confirmed from the server and never from the URL.',
+
+    /* ── footer ── */
+    footMark:'Unofficial sales demo',
+    footBody:'— not an official Moyasar product page. Test mode only; no real payments.',
+
+    /* ── dev tab labels ── */
+    dtForm:'Form', dtMetadata:'Metadata', dtToken:'Token', dtCapture:'Capture',
+    dtVoidRefund:'Void vs refund', dtWebhooks:'Webhooks', dtSettlement:'Settlement',
+    dtSplits:'Splits', dtIntents:'Intents', dtWallets:'Wallets',
+    dtCallback:'Callback', dtVerify:'Verify',
+
+    scopeAgg:'Aggregation accounts only — not available to bank (facilitation) merchants, and enabled per account.',
+
+    /* ── void vs refund ── */
+    vrLead:'<strong>Prefer void over refund whenever the timing allows.</strong> A void releases the hold instantly and avoids the processing fee; a refund costs money and needs balance to cover it.',
+    vrColWhat:'', vrColVoid:'Void', vrColRefund:'Refund',
+    vrRowCost:'Cost',    vrCostV:'Free — no processing fee', vrCostR:'Costs a processing fee',
+    vrRowSpeed:'Speed',  vrSpeedV:'Releases the hold instantly', vrSpeedR:'Days to reach the cardholder',
+    vrRowWindow:'Window',
+    vrWindowV:'An <em>authorized</em> payment: within 14 days on mada. A <em>paid</em> or <em>captured</em> one: only within roughly 2 hours.',
+    vrWindowR:'Any time after the charge, full or partial, never more than the amount charged.',
+    vrRowBal:'Balance',  vrBalV:'Not required', vrBalR:'On live aggregation accounts the account balance must cover it',
+    vrRowStatus:'Status after', vrStatusV:'voided', vrStatusR:'refunded',
+    vrServer:'Both run on your server with the secret key. Neither can be called from a browser.',
+
+    /* ── webhooks ── */
+    whNote:'A webhook is Moyasar telling your server what happened, instead of your server asking. Register an HTTPS endpoint, an HTTP method, a <strong>Secret Token</strong> and the events you want.',
+    whValidate:'Validate the Secret Token on every request before you trust the body, and return <strong>2xx immediately</strong> — before fulfilling the order, writing to the ERP or sending email. Slow work after the response, never before it.',
+    whRetryTitle:'Retry schedule on any non-2xx reply',
+    whCol1:'Attempt', whCol2:'When',
+    whAttempt:'Attempt',
+    whNow:'immediately', whDropped:'message dropped',
+    whTruth:'<strong>Webhooks are not a source of truth on their own.</strong> Six attempts and the message is gone — a deploy, a timeout or a bad certificate during that window and you never hear about the payment. Run a reconcile job that fetches payments by date and fills the gaps.',
+    whEvents:'Events available',
+
+    /* ── settlement ── */
+    stNote:'A settlement is a <strong>transfer</strong>. Moyasar emails a UTF-8 CSV with every line in the payout, and the same data is on the API.',
+    stCsvTitle:'The settlement CSV for the payments in this demo',
+    stPoint:'<strong>Every metadata key becomes its own column.</strong> Put your order number on the payment and the settlement file reconciles straight into the ERP — no manual matching, no lookup table, no spreadsheet work at month end.',
+    stTypes:'<strong>type</strong> values: pay, refund, void, fee, platform_duties, other_duties, chargeback, chargeback_penalty, installment.',
+
+    /* ── splits ── */
+    splNote:'Split a single payment between several recipients at the moment it is taken — the marketplace keeps its commission and the seller is paid directly, with no money sitting in your account in between.',
+    splRulesTitle:'Validation rules',
+    splRule1:'The splits must total exactly the payment amount.',
+    splRule2:'Zero or exactly one <strong>fee_source</strong> — never more.',
+    splRule3:'If no split is marked <strong>fee_source</strong>, the merchant with the largest split pays the gateway fee.',
+    splRule4:'<strong>recipient_id</strong> comes from the recipient record, not from your own database.',
+
+    /* ── intents ── */
+    intNote:'Your backend creates the intent with the secret key and fixes the amount, currency, description and callback URL. It returns a single-use <strong>client_secret</strong>, and the browser fulfils it with the publishable key.',
+    intWhy:'<strong>Why it matters:</strong> a publishable key that leaks cannot originate a payment of its own. The amount was set on your server before the browser ever saw it — so nobody can reopen your checkout and pay 1.00 for a 1,000.00 order.',
+    verifyIntent:'VERIFY against the Payment Intents guide before showing a developer: the exact parameter name for the client secret.',
+
+    capPartialNote:'The guest authorised 500.00 on arrival. They spent 380.00. You capture 380.00 and the other 120.00 is released by the act of capturing less — there is no second call to make and no refund fee to pay.',
+    capRules:'<strong>The rules:</strong> a capture can never exceed what was authorised, and a mada authorisation must be captured within 14 days. Capture less than the authorised amount and the difference is released.',
+    capServerOnly:'Capture cannot run in this demo — it needs the secret key, and a secret key must never sit in a web page. On the hotel scene the authorisation above is real; the capture is the step your server makes.',
+
+    /* ── SADAD dev note ── */
+    sdNote:'A SADAD bill is created on your server, not in the browser — there is no card form and nothing for the customer to fill in. Moyasar returns the bill number, which you show or send to the customer.',
+    sdWarn:'Nothing on this scene calls the API. The bill number, dates and status below are a walkthrough of what the customer sees — the real bill comes from your server.',
+    aftDevWarn:'STC Pay and Google Pay are absent from <strong>methods</strong> deliberately — neither can fund an Account Funding Transaction. The entity must also be enabled for AFT, or the API rejects this payment.',
+    stFeeNote:'<strong>fee</strong>, <strong>vat</strong>, <strong>total_fee</strong> and <strong>net_amount</strong> are left blank here on purpose — they come from your agreed rate card, and this demo does not quote pricing.',
+
+    currency:'SAR', langLabel:'العربية',
+  },
+  ar:{
+    brandName:'مدفوعات موياسر', brandSub:'عرض مباشر للتكامل',
+    testChip:'وضع الاختبار', tabStore:'متجر إلكتروني', tabInvoice:'رابط دفع',
+    devToggle:'واجهة المطوّر', devLive:'الطلب المباشر',
+    noticeTitle:'أضف مفتاح النشر للبدء',
+    noticeBody:'افتح هذا الملف في محرر نصوص واستبدل <code>PK_TEST_KEY_HERE</code> في أعلى السكربت بمفتاح النشر التجريبي من موياسر (<code>pk_test_…</code>). احفظ الملف وأعد رفعه ليعمل الدفع مباشرة.',
+    storeHead:'العميل يكمل عملية الشراء',
+    storeSub:'أضف بعض المنتجات ثم ادفع ببطاقة تجريبية. هذا هو نموذج موياسر نفسه الذي سيراه عملاؤك — لا شيء هنا محاكاة.',
+    storeTag:'الرياض · طلبات أونلاين',
+    cartTitle:'ملخص الطلب', subtotal:'المجموع', vat:'ضريبة القيمة المضافة ١٥٪', total:'الإجمالي',
+    payNow:'ادفع الآن', cartEmpty:'اختر منتجاً من الأعلى',
+    invHead:'العميل يفتح رابط الدفع',
+    invSub:'أرسله عبر واتساب أو البريد أو رسالة نصية. بدون موقع وبدون تكامل — العميل يضغط ويدفع.',
+    invFrom:'فاتورة من', invDue:'الدفع عند الاستلام', invAmountLabel:'المبلغ المستحق',
+    invItem1:'استشارة تصميم — ٦ ساعات', invItem2:'رفع ومسح الموقع',
+    invItem3:'تصور ثلاثي الأبعاد', payInvoice:'ادفع ٤٬٣١٢٫٥٠ ريال',
+    checkout:'إتمام الدفع',
+    testCardsTitle:'بطاقات تجريبية — اضغط للنسخ',
+    tcSuccess:'عملية ناجحة', tcSuccessMc:'عملية ناجحة',
+    tcDecline:'عملية مرفوضة', tcRest:'أي تاريخ انتهاء مستقبلي، أي رمز تحقق، أي اسم',
+    paidTitle:'تم استلام الدفعة', paidText:'عاد العميل إلى موقعك وتم تأكيد الطلب. هذه العملية ظاهرة الآن في لوحة تحكم موياسر.',
+    failTitle:'لم تكتمل العملية', failText:'تم رفض البطاقة أو ألغى العميل العملية. لم يتم خصم أي مبلغ.',
+    runAgain:'أعد تشغيل العرض',
+    mId:'معرّف العملية', mStatus:'الحالة', mAmount:'المبلغ', mMethod:'الطريقة',
+    copied:'تم نسخ رقم البطاقة', keyMissing:'أضف مفتاح النشر أولاً',
+    optMetadata:'بيانات إضافية',
+    metaTitle:'مرفقة بهذه العملية',
+    metaNote:'قابلة للبحث في لوحة تحكم موياسر. عدّلها وشاهد الإعدادات تتحدث.',
+    optsLabel:'خيارات الدفع',
+    optSave:'حفظ البطاقة (توكن)',
+    optManual:'حجز المبلغ فقط',
+    optApplePay:'أبل باي',
+    saveNote:'يضيف <strong>credit_card.save_card: true</strong>. تعيد استجابة الدفع توكن قابلاً لإعادة الاستخدام — أساس المدفوعات المتكررة.',
+    manualNote:'يضيف <strong>credit_card.manual: true</strong>. يتم حجز المبلغ دون خصمه، والتحصيل يتم لاحقاً من الخادم.',
+    applePayNote:'يظهر فقط في <strong>سفاري على أجهزة أبل</strong>، ويجب تسجيل النطاق في لوحة موياسر أولاً.',
+    mToken:'توكن البطاقة المحفوظة',
+
+    /* ── المشاهد ── */
+    tabSadad:'فاتورة سداد', tabWallet:'تعبئة المحفظة', tabHotel:'عربون فندقي',
+
+    /* ── رفض المفتاح المباشر ── */
+    blockedTitle:'تم رصد مفتاح مباشر — العرض معطّل',
+    blockedBody:'مفتاح النشر في هذا الملف يبدأ بـ <code>pk_live_</code>، وهذا يعني خصم مبالغ حقيقية من أي شخص يضغط «ادفع». لن يعمل أي شيء في هذه الصفحة حتى يُستبدل بمفتاح تجريبي (<code>pk_test_…</code>).',
+    blockedToast:'مفتاح مباشر — العرض معطّل',
+
+    /* ── الشخصيات ── */
+    personaLabel:'من الحاضر في الاجتماع؟',
+    pOwnerName:'صاحب العمل',  pOwnerWhat:'سرعة الدفع، أبل باي، روابط الدفع',
+    pDevName:'مطوّر',          pDevWhat:'الـ API، الويبهوك، وضع الاختبار، نوايا الدفع',
+    pFinName:'المالية',        pFinWhat:'التسويات، المطابقة، الاسترجاع مقابل الإلغاء',
+
+    /* ── تعدد العملات ── */
+    ccyLabel:'عملة العرض',
+    ccyNoteSar:'كل عملة هي قائمة أسعار التاجر في ذلك السوق — وليست تحويلاً بسعر صرف.',
+    ccyNoteOther:'<strong>لحسابات التجميع فقط</strong>، وغير مفعّلة تلقائياً. موياسر يسوّي للتاجر دائماً بالـ <strong>ريال السعودي</strong>، بسعر صرف ثابت من موياسر يتضمن هامش تحويل. بالبطاقات فقط — مدى وفيزا وماستركارد. والاسترجاع يتم بالعملة الأصلية.',
+    vatSarOnly:'الضريبة معروضة للريال السعودي. المعالجة الضريبية للبيع خارج المملكة يحددها التاجر.',
+
+    /* ── سداد ── */
+    sadadHead:'منشأة تدفع بدون بطاقة',
+    sadadSub:'أصدر رقم سداد ويدفعه العميل من أي تطبيق بنكي سعودي أو صرّاف آلي. هكذا تسدد إدارات المالية فواتيرها — بلا بطاقة، بلا صفحة دفع، وبلا نزاعات.',
+    sadadNumLabel:'رقم فاتورة سداد',
+    sadadSample:'رقم للتوضيح — الرقم الحقيقي يصدره خادمك.',
+    sadadAmount:'المبلغ المستحق', sadadExpiry:'ينتهي في',
+    sadadPayFrom:'الدفع من', sadadPayFromV:'أي تطبيق بنكي سعودي أو صرّاف آلي',
+    sadadInitiated:'قيد الإصدار', sadadPaidStatus:'مدفوعة',
+    sadadIssueBtn:'أصدر فاتورة سداد',
+    sadadPaidBtn:'العميل يدفعها من بنكه',
+    sadadIssuedToast:'تم إصدار الفاتورة — الحالة initiated',
+    sadadPaidToast:'تم الدفع — يُرسل الويبهوك payment_paid',
+    sadadLimitsTitle:'ثلاثة قيود يجب ذكرها بوضوح',
+    sadadLimit1:'بالريال السعودي فقط — لا عملات أخرى.',
+    sadadLimit2:'تنتهي الفاتورة خلال ٢٩ يوماً كحد أقصى.',
+    sadadLimit3:'لا استرجاع ولا تحصيل ولا إلغاء. إعادة المبلغ تتم بحوالة بنكية.',
+
+    /* ── تعبئة المحفظة / AFT ── */
+    walletHead:'عميل يعبّئ رصيد محفظته',
+    walletSub:'تعبئة الرصيد ليست عملية شراء — شبكات البطاقات تصنّفها عملية تمويل حساب (AFT)، وتتطلب إرفاق بيانات المُرسل والمستفيد مع العملية.',
+    walletBalLabel:'رصيد المحفظة', walletPick:'أضف إلى الرصيد',
+    walletPayBtn:'عبّئ الرصيد',
+    aftDenyTitle:'لا تصلح لتمويل محفظة',
+    aftDenyBody:'STC Pay وجوجل باي لا تدعمان عمليات تمويل الحساب، ولذلك استُثنيتا من <code>methods</code> عن قصد. البطاقة وأبل باي وسامسونج باي فقط. كما يجب تفعيل الـ AFT على المنشأة، وإلا رفض الـ API العملية.',
+    aftSender:'sender — مطلوب', aftRecipient:'recipient — مطلوب',
+    aftWin:'تعبئة واحدة بـ ١٠٠ ريال تتحمل رسوم عملية واحدة. وعشر عمليات شراء بـ ١٠ ريال من ذلك الرصيد لا تتحمل أي رسوم.',
+
+    /* ── العربون الفندقي ── */
+    hotelHead:'فندق يحجز عرباناً ثم يخصم أقل منه',
+    hotelSub:'احجز المبلغ عند الوصول، وحصّل ما صرفه الضيف فعلاً، وأفرج عن الباقي. نفس النمط يغطي سياسات عدم الحضور وتأجير السيارات وكل ما يُسعَّر قبل معرفة الفاتورة النهائية.',
+    hotelStay:'ليلتان · غرفة ديلوكس · الرياض',
+    hotelAuthLabel:'عربون محجوز',
+    hotelAuthBtn:'احجز ٥٠٠٫٠٠ ريال',
+    hotelCaptureBtn:'حصّل ٣٨٠٫٠٠ ريال (من الخادم)',
+    hotelWindowTitle:'القيد الذي يؤثر على الحجوزات الحقيقية',
+    hotelWindow1:'حجز مدى يجب تحصيله خلال ١٤ يوماً. غرفة محجوزة قبل ثلاثة أشهر لا يمكن حجز مبلغها اليوم وتحصيله عند الوصول.',
+    hotelWindow2:'قد تسمح الشبكات الأخرى بمدة أطول — تأكد من المدة لكل شبكة قبل تصميم مسار الحجز.',
+    sideBrowser:'المتصفح', sideServer:'الخادم',
+    hStep1T:'حجز العربون',
+    hStep1W:'<strong>manual: true</strong> على مصدر البطاقة. يرى الضيف الحجز في كشف حسابه دون خصم أي مبلغ. تصبح الحالة <strong>authorized</strong>.',
+    hStep2T:'تحصيل ما صرفه فعلاً',
+    hStep2W:'الميني بار والتأخير في المغادرة بلغا ٣٨٠٫٠٠. حصّل هذا المبلغ فقط — فالتحصيل لا يتجاوز المبلغ المحجوز أبداً. تصبح الحالة <strong>captured</strong>.',
+    hStep3T:'الإفراج عن الباقي',
+    hStep3W:'تحصيل أقل من المبلغ المحجوز يُفرج عن الفرق تلقائياً. بلا طلب إضافي، وبلا استرجاع، وبلا رسوم.',
+    hotelCapturedToast:'تم تحصيل ٣٨٠٫٠٠ — وأُفرج عن ١٢٠٫٠٠',
+
+    /* ── التحقق ثلاثي الأبعاد ── */
+    tc3ds:'تحقق 3-D Secure',
+    tdsTitle:'ما يحدث مع بطاقة تتطلب 3-D Secure',
+    tdsBody:'يعيد موياسر العملية مع <code>source.transaction_url</code> وينقل العميل إلى صفحة التحقق الخاصة ببنكه — رمز عبر رسالة نصية أو تطبيق البنك. النموذج يتولى ذلك بنفسه ولا يوجد ما تبنيه. ثم يعود العميل إلى <code>callback_url</code>، ولهذا يجب تأكيد الطلب من الخادم لا من الرابط.',
+
+    /* ── التذييل ── */
+    footMark:'عرض مبيعات غير رسمي',
+    footBody:'— ليست صفحة منتج رسمية من موياسر. وضع الاختبار فقط؛ لا مدفوعات حقيقية.',
+
+    /* ── أسماء تبويبات المطوّر ── */
+    dtForm:'النموذج', dtMetadata:'بيانات إضافية', dtToken:'التوكن', dtCapture:'التحصيل',
+    dtVoidRefund:'إلغاء أم استرجاع', dtWebhooks:'ويبهوك', dtSettlement:'التسوية',
+    dtSplits:'تقسيم المبالغ', dtIntents:'نوايا الدفع', dtWallets:'المحافظ',
+    dtCallback:'العودة', dtVerify:'التحقق',
+
+    scopeAgg:'لحسابات التجميع فقط — غير متاحة لتجّار التسهيل البنكي، وتُفعَّل لكل حساب على حدة.',
+
+    /* ── إلغاء أم استرجاع ── */
+    vrLead:'<strong>فضّل الإلغاء على الاسترجاع كلما سمح التوقيت.</strong> الإلغاء يُفرج عن الحجز فوراً ويوفّر رسوم المعالجة، أما الاسترجاع فيكلّف رسوماً ويحتاج رصيداً يغطيه.',
+    vrColWhat:'', vrColVoid:'الإلغاء (void)', vrColRefund:'الاسترجاع (refund)',
+    vrRowCost:'الكلفة',  vrCostV:'مجاني — بلا رسوم معالجة', vrCostR:'يكلّف رسوم معالجة',
+    vrRowSpeed:'السرعة', vrSpeedV:'يُفرج عن الحجز فوراً', vrSpeedR:'أيام حتى تصل لحامل البطاقة',
+    vrRowWindow:'المدة المتاحة',
+    vrWindowV:'عملية <em>authorized</em>: خلال ١٤ يوماً على مدى. وعملية <em>paid</em> أو <em>captured</em>: خلال ساعتين تقريباً فقط.',
+    vrWindowR:'في أي وقت بعد الخصم، كلياً أو جزئياً، وبما لا يتجاوز المبلغ المخصوم.',
+    vrRowBal:'الرصيد',   vrBalV:'غير مطلوب', vrBalR:'في حسابات التجميع المباشرة يجب أن يغطيه رصيد الحساب',
+    vrRowStatus:'الحالة بعدها', vrStatusV:'voided', vrStatusR:'refunded',
+    vrServer:'كلتاهما تُنفَّذ على خادمك بالمفتاح السري. ولا يمكن استدعاء أي منهما من المتصفح.',
+
+    /* ── الويبهوك ── */
+    whNote:'الويبهوك هو إبلاغ موياسر لخادمك بما حدث، بدلاً من أن يسأل خادمك. تسجّل رابط HTTPS وطريقة HTTP و<strong>Secret Token</strong> والأحداث التي تريدها.',
+    whValidate:'تحقّق من الـ Secret Token في كل طلب قبل الاعتماد على محتواه، وأعد <strong>2xx فوراً</strong> — قبل تنفيذ الطلب أو الكتابة في نظام الـ ERP أو إرسال البريد. العمل الطويل يأتي بعد الرد لا قبله.',
+    whRetryTitle:'جدول إعادة المحاولة عند أي رد غير 2xx',
+    whCol1:'المحاولة', whCol2:'التوقيت',
+    whAttempt:'المحاولة',
+    whNow:'فوراً', whDropped:'تُسقَط الرسالة',
+    whTruth:'<strong>الويبهوك وحده ليس مصدر الحقيقة.</strong> ست محاولات ثم تضيع الرسالة — نشرة جديدة أو انقطاع أو شهادة خاطئة في تلك الفترة ولن تعلم بالعملية أبداً. شغّل مهمة مطابقة دورية تجلب العمليات بالتاريخ وتغطي الفجوات.',
+    whEvents:'الأحداث المتاحة',
+
+    /* ── التسوية ── */
+    stNote:'التسوية هي <strong>transfer</strong>. يرسل موياسر ملف CSV بترميز UTF-8 يحتوي كل سطر في الحوالة، ونفس البيانات متاحة على الـ API.',
+    stCsvTitle:'ملف التسوية للعمليات في هذا العرض',
+    stPoint:'<strong>كل مفتاح في metadata يصبح عموداً خاصاً به.</strong> أضف رقم طلبك إلى العملية ويصبح ملف التسوية قابلاً للترحيل مباشرة إلى نظام الـ ERP — بلا مطابقة يدوية، وبلا جدول ربط، وبلا عمل على الإكسل في نهاية الشهر.',
+    stTypes:'قيم <strong>type</strong>: pay، refund، void، fee، platform_duties، other_duties، chargeback، chargeback_penalty، installment.',
+
+    /* ── تقسيم المبالغ ── */
+    splNote:'قسّم العملية الواحدة بين عدة مستفيدين في لحظة تنفيذها — المنصة تحتفظ بعمولتها ويُدفع للبائع مباشرة، دون أن يمر المال عبر حسابك.',
+    splRulesTitle:'قواعد التحقق',
+    splRule1:'مجموع التقسيمات يجب أن يساوي مبلغ العملية بالضبط.',
+    splRule2:'<strong>fee_source</strong> واحد فقط أو لا شيء — ولا أكثر.',
+    splRule3:'إذا لم يُحدَّد <strong>fee_source</strong>، يتحمل التاجر صاحب أكبر نصيب رسوم البوابة.',
+    splRule4:'<strong>recipient_id</strong> يأتي من سجل المستفيد، لا من قاعدة بياناتك.',
+
+    /* ── نوايا الدفع ── */
+    intNote:'خادمك ينشئ النية بالمفتاح السري ويثبّت المبلغ والعملة والوصف ورابط العودة. فيعيد <strong>client_secret</strong> يُستخدم مرة واحدة، ثم يكملها المتصفح بمفتاح النشر.',
+    intWhy:'<strong>لماذا يهم:</strong> مفتاح النشر إذا تسرّب لا يستطيع إنشاء عملية من تلقاء نفسه. فالمبلغ حُدِّد على خادمك قبل أن يراه المتصفح — فلا يمكن لأحد أن يعيد فتح صفحة الدفع ويدفع ١٫٠٠ عن طلب بـ ١٬٠٠٠٫٠٠.',
+    verifyIntent:'يجب التأكد من دليل نوايا الدفع قبل عرضها على مطوّر: الاسم الدقيق للمعامل الخاص بالـ client secret.',
+
+    capPartialNote:'حجز الضيف ٥٠٠٫٠٠ عند الوصول، وصرف فعلياً ٣٨٠٫٠٠. تحصّل ٣٨٠٫٠٠ ويُفرج عن الـ ١٢٠٫٠٠ الباقية بمجرد تحصيلك مبلغاً أقل — بلا طلب ثانٍ وبلا رسوم استرجاع.',
+    capRules:'<strong>القواعد:</strong> التحصيل لا يتجاوز المبلغ المحجوز أبداً، وحجز مدى يجب تحصيله خلال ١٤ يوماً. وتحصيل مبلغ أقل من المحجوز يُفرج عن الفرق تلقائياً.',
+    capServerOnly:'التحصيل لا يمكن تنفيذه في هذا العرض — فهو يحتاج المفتاح السري، والمفتاح السري لا يوضع أبداً في صفحة ويب. في مشهد الفندق يكون الحجز أعلاه حقيقياً، أما التحصيل فهو الخطوة التي ينفذها خادمك.',
+
+    /* ── ملاحظة سداد للمطوّر ── */
+    sdNote:'فاتورة سداد تُنشأ على خادمك لا في المتصفح — لا يوجد نموذج بطاقة ولا شيء يعبّئه العميل. يعيد موياسر رقم الفاتورة لتعرضه أو ترسله للعميل.',
+    sdWarn:'لا شيء في هذا المشهد يستدعي الـ API. رقم الفاتورة والتواريخ والحالة أدناه هي محاكاة لما يراه العميل — أما الفاتورة الحقيقية فتأتي من خادمك.',
+    aftDevWarn:'STC Pay وجوجل باي غير موجودتين في <strong>methods</strong> عن قصد — فلا واحدة منهما تصلح لتمويل عملية AFT. كما يجب تفعيل الـ AFT على المنشأة وإلا رفض الـ API هذه العملية.',
+    stFeeNote:'حقول <strong>fee</strong> و<strong>vat</strong> و<strong>total_fee</strong> و<strong>net_amount</strong> تُركت فارغة عن قصد — فهي تأتي من عرض السعر المتفق عليه، وهذا العرض لا يذكر أسعاراً.',
+
+    currency:'ريال', langLabel:'English',
+  }
+};
+
+let lang = 'en';
+let scene = 'store';
+let devOpen = false;
+let devTab = 'init';
+let cart = {};
+let formMounted = false;
+
+let storeCcy    = 'SAR';   // multi-currency switch, store scene only
+let persona     = null;    // owner | developer | finance
+let topupAmount = 10000;   // SAR 100.00 — the brief's worked example
+let sadadStage  = 0;       // 0 not issued · 1 initiated · 2 paid
+let hotelStage  = 0;       // 0 nothing · 1 authorized · 2 captured
+let brandName   = 'Mawj Coffee';
+
+/* payment options the demo can genuinely exercise */
+let optSaveCard  = false;   // credit_card.save_card  → returns a token
+let optManual    = false;   // credit_card.manual     → authorize, capture later
+let optApplePay  = false;   // adds 'applepay' to methods
+let lastError    = null;    // set by Moyasar's on_failure callback
+let optMetadata  = true;    // attach searchable key/value pairs
+let meta = [
+  { k:'order_id',    v:'ORD-10039' },
+  { k:'branch',      v:'Riyadh — Olaya' },
+  { k:'customer_id', v:'CUST-4471' },
+];
+
+const $ = s => document.querySelector(s);
+const t = k => T[lang][k] || k;
+
+/* A live key would take real money from whoever taps Pay in a meeting.
+   Refuse to initialise anything at all if one is ever pasted in. */
+const keyIsLive  = () => /^pk_live_/.test(String(PUBLISHABLE_KEY || ''));
+const keyReady   = () => !!PUBLISHABLE_KEY
+                      && PUBLISHABLE_KEY !== 'PK_TEST_KEY_HERE'
+                      && !keyIsLive();
+
+/* metadata values are typed by the user — escape before putting them in markup */
+function esc(str){
+  return String(str == null ? '' : str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+/* Moyasar requires a real http(s) callback URL. Opened straight from disk,
+   location.origin is the string "null", which Moyasar rejects. */
+const isHosted = location.protocol === 'http:' || location.protocol === 'https:';
+const callbackUrl = () => isHosted
+  ? location.origin + location.pathname
+  : 'https://moyasar.com/thanks';
+
+/* If unpkg is blocked or slow, try these in order before giving up. */
+const MYSR_VERSION = '2.2.14';
+const CDN_FALLBACKS = [
+  { js : `https://cdn.jsdelivr.net/npm/moyasar-payment-form@${MYSR_VERSION}/dist/moyasar.umd.js`,
+    css: `https://cdn.jsdelivr.net/npm/moyasar-payment-form@${MYSR_VERSION}/dist/moyasar.css` },
+  { js : 'https://cdn.moyasar.com/mpf/1.15.0/moyasar.js',
+    css: 'https://cdn.moyasar.com/mpf/1.15.0/moyasar.css' },
+];
+
+function loadCss(href){
+  const l = document.createElement('link');
+  l.rel = 'stylesheet'; l.href = href;
+  document.head.appendChild(l);
+}
+function loadScript(src){
+  return new Promise((resolve, reject)=>{
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = resolve;
+    s.onerror = () => reject(new Error(src));
+    document.head.appendChild(s);
+  });
+}
+async function ensureMoyasar(){
+  if (typeof Moyasar !== 'undefined') return true;
+  for (const f of CDN_FALLBACKS){
+    console.warn('[demo] primary CDN failed — trying', f.js);
+    try{
+      loadCss(f.css);
+      await loadScript(f.js);
+      if (typeof Moyasar !== 'undefined') return true;
+    } catch(e){ /* try the next one */ }
+  }
+  return false;
+}
+
+/* ── money ──
+   Only the store scene switches currency; everything else is SAR.      */
+function sceneCcy(){ return scene === 'store' ? storeCcy : 'SAR'; }
+
+function money(minor, ccy){
+  const code = ccy || sceneCcy();
+  const d = CCY[code].exp;
+  const v = (minor / Math.pow(10, d)).toLocaleString(lang==='ar'?'ar-SA':'en-US',
+    {minimumFractionDigits:d, maximumFractionDigits:d});
+  return v + ' ' + (lang === 'ar' ? CCY[code].ar : CCY[code].en);
+}
+
+function cartTotals(){
+  let sub = 0;
+  for (const id in cart){
+    const item = CATALOGUE.find(x=>x.id===id);
+    if (item) sub += item.price[storeCcy] * cart[id];
+  }
+  /* Saudi VAT applies to the SAR price list. Tax treatment on cross-border
+     sales is the merchant's own to set, so no rate is invented here. */
+  const vatable = storeCcy === 'SAR';
+  const vat = vatable ? Math.round(sub * 0.15) : 0;
+  return { sub, vat, grand: sub + vat, vatable };
+}
+const invoiceTotal = 431250;
+
+/* ── i18n ──
+   These keys carry inline markup, so they are set as HTML, not text. */
+const HTML_KEYS = new Set(['noticeBody','blockedBody','aftDenyBody','tdsBody']);
+
+function applyLang(){
+  document.documentElement.lang = lang;
+  document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+  document.querySelectorAll('[data-t]').forEach(el=>{
+    const v = t(el.dataset.t);
+    if (HTML_KEYS.has(el.dataset.t)) el.innerHTML = v;
+    else el.textContent = v;
+  });
+  $('#langBtn').textContent = t('langLabel');
+  renderGoods(); renderCcy(); renderCart(); renderTopups();
+  renderHotel(); renderSadad(); renderOpts(); renderDev();
+}
+
+/* ── store ── */
+function renderGoods(){
+  $('#goods').innerHTML = CATALOGUE.map(p=>`
+    <button class="good" data-add="${p.id}">
+      <div class="good-art">${p.art}</div>
+      <div class="good-name">${esc(p[lang])}</div>
+      <div class="good-price">${money(p.price[storeCcy], storeCcy)}</div>
+      <div class="good-add">+ ${esc(t('payNow').split(' ')[0])}</div>
+    </button>`).join('');
+}
+
+/* ── multi-currency switch ── */
+function renderCcy(){
+  const list = $('#ccyList');
+  if (!list) return;
+  list.innerHTML = Object.keys(CCY).map(c=>
+    `<button class="ccy" data-ccy="${c}" aria-pressed="${c===storeCcy}">${c}</button>`
+  ).join('');
+
+  /* The scope badge has to stay visible — this is an aggregation-only
+     feature, and claiming otherwise in a meeting is a problem later. */
+  $('#ccyNote').innerHTML = storeCcy === 'SAR'
+    ? t('ccyNoteSar')
+    : `<span class="scope">${esc(t('scopeAgg'))}</span><br>${t('ccyNoteOther')}`;
+}
+
+function renderCart(){
+  const ids = Object.keys(cart);
+  const box = $('#cartLines');
+  if (!ids.length){
+    box.innerHTML = `<div class="cart-empty">${t('cartEmpty')}</div>`;
+    $('#totals').classList.add('hide');
+    $('#storePay').disabled = true;
+    $('#storePay').textContent = t('payNow');
+    renderDev();
+    return;
+  }
+  box.innerHTML = ids.map(id=>{
+    const p = CATALOGUE.find(x=>x.id===id);
+    return `<div class="line">
+      <span class="line-icon">${p.art}</span>
+      <span class="line-name">${esc(p[lang])}</span>
+      <span class="qty">
+        <button data-dec="${id}" aria-label="-">−</button>
+        <span>${cart[id]}</span>
+        <button data-inc="${id}" aria-label="+">+</button>
+      </span>
+      <span class="line-total">${money(p.price[storeCcy]*cart[id], storeCcy)}</span>
+    </div>`;
+  }).join('');
+
+  const { sub, vat, grand, vatable } = cartTotals();
+  $('#subtotal').textContent = money(sub, storeCcy);
+  $('#vat').textContent = money(vat, storeCcy);
+  $('#vatRow').classList.toggle('hide', !vatable);
+  $('#grand').textContent = money(grand, storeCcy);
+  $('#totals').classList.remove('hide');
+  $('#storePay').disabled = false;
+  $('#storePay').textContent = `${t('payNow')} · ${money(grand, storeCcy)}`;
+  renderDev();
+}
+
+/* ── wallet top-up (AFT) ── */
+function renderTopups(){
+  const box = $('#topups');
+  if (!box) return;
+  box.innerHTML = TOPUPS.map(a=>
+    `<button class="topup" data-topup="${a}" aria-pressed="${a===topupAmount}">${money(a,'SAR')}</button>`
+  ).join('');
+  $('#walletPay').textContent = `${t('walletPayBtn')} · ${money(topupAmount,'SAR')}`;
+}
+
+/* ── SADAD ── */
+function renderSadad(){
+  const num = $('#sadadNum');
+  if (!num) return;
+
+  $('#sadadAmount').textContent = money(SADAD_AMOUNT, 'SAR');
+
+  if (sadadStage === 0){
+    num.textContent = '—';
+    $('#sadadExpiry').textContent = '—';
+    $('#sadadIssue').classList.remove('hide');
+    $('#sadadPaid').classList.add('hide');
+  } else {
+    num.textContent = sadadNumber();
+    const due = new Date(Date.now() + SADAD_DAYS*864e5);
+    $('#sadadExpiry').textContent = due.toISOString().slice(0,10);
+    $('#sadadIssue').classList.add('hide');
+    $('#sadadPaid').classList.toggle('hide', sadadStage >= 2);
+  }
+
+  const done = sadadStage >= 2;
+  $('#sadadPill').className = 'status-pill ' + (done ? 'done' : 'wait');
+  $('#sadadStatus').textContent = done ? t('sadadPaidStatus') : t('sadadInitiated');
+  $('#sadadStatusWrap').classList.toggle('hide', sadadStage === 0);
+}
+
+/* Stable per-session sample, so the number does not jump on re-render. */
+let _sadadNum = null;
+function sadadNumber(){
+  if (!_sadadNum){
+    let s = '';
+    for (let i=0;i<4;i++) s += String(Math.floor(1000 + Math.random()*9000));
+    _sadadNum = s.replace(/(\d{4})(?=\d)/g, '$1 ');
+  }
+  return _sadadNum;
+}
+
+/* ── hotel deposit ── */
+function renderHotel(){
+  const flow = $('#hotelFlow');
+  if (!flow) return;
+
+  const steps = [
+    { t:t('hStep1T'), w:t('hStep1W'), amt:money(HOTEL_AUTH,'SAR'),
+      side:t('sideBrowser'), srv:false, at:1 },
+    { t:t('hStep2T'), w:t('hStep2W'), amt:money(HOTEL_TAKE,'SAR'),
+      side:t('sideServer'),  srv:true,  at:2 },
+    { t:t('hStep3T'), w:t('hStep3W'), amt:money(HOTEL_AUTH-HOTEL_TAKE,'SAR'),
+      side:t('sideServer'),  srv:true,  at:2 },
+  ];
+
+  flow.innerHTML = steps.map((s,i)=>{
+    const state = hotelStage >= s.at ? 'done' : (hotelStage === s.at-1 ? 'now' : '');
+    return `<div class="step ${state}">
+      <div class="step-num">${hotelStage >= s.at ? '✓' : i+1}</div>
+      <div class="step-body">
+        <div class="step-title">${esc(s.t)}
+          <span class="step-amount">${s.amt}</span>
+          <span class="step-side ${s.srv?'srv':''}">${esc(s.side)}</span>
+        </div>
+        <div class="step-what">${s.w}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  $('#hotelPay').classList.toggle('hide', hotelStage >= 1);
+  $('#hotelCapture').classList.toggle('hide', hotelStage !== 1);
+  $('#hotelPay').textContent     = `${t('hotelAuthBtn')}`;
+  $('#hotelCapture').textContent = `${t('hotelCaptureBtn')}`;
+}
+
+/* ── dev panel ── */
+function currentConfig(){
+  switch (scene){
+    case 'invoice':
+      return { amount: invoiceTotal, currency:'SAR',
+               desc:`${$('#invIssuer').textContent} — ${$('#invRef').textContent}` };
+    case 'wallet':
+      return { amount: topupAmount, currency:'SAR',
+               desc:`${brandName} — wallet top-up` };
+    case 'hotel':
+      return { amount: HOTEL_AUTH, currency:'SAR',
+               desc:`${$('#hotelName').textContent} — BKG-77104 deposit` };
+    case 'sadad':
+      return { amount: SADAD_AMOUNT, currency:'SAR',
+               desc:`${$('#sadadIssuer').textContent} — INV-B2B-2291` };
+    default:
+      return { amount: cartTotals().grand, currency: storeCcy,
+               desc:`${$('#storeName').value.trim() || 'Store'} — order` };
+  }
+}
+
+/* Assemble exactly what gets handed to Moyasar.init */
+function moyasarConfig(){
+  const { amount, desc, currency } = currentConfig();
+  const label = scene === 'store'
+    ? ($('#storeName').value.trim() || 'Store')
+    : brandName;
+
+  /* stcpay is never listed. On the wallet scene that is a hard requirement —
+     STC Pay and Google Pay cannot fund an Account Funding Transaction. */
+  const cfg = {
+    element: '#mysrForm',
+    amount: amount,
+    currency: currency,
+    description: desc,
+    publishable_api_key: PUBLISHABLE_KEY,
+    callback_url: callbackUrl(),
+    methods: optApplePay ? ['creditcard','applepay'] : ['creditcard'],
+    supported_networks: ['mada','visa','mastercard'],
+    language: lang,
+  };
+
+  if (optMetadata){
+    const m = {};
+    meta.forEach(r=>{ if (r.k.trim() && r.v.trim()) m[r.k.trim()] = r.v.trim(); });
+    if (Object.keys(m).length) cfg.metadata = m;
+  }
+
+  /* The hotel scene is an authorisation by definition — hold, do not take. */
+  const manual = optManual || scene === 'hotel';
+  if (optSaveCard || manual){
+    cfg.credit_card = {};
+    if (optSaveCard) cfg.credit_card.save_card = true;
+    if (manual)      cfg.credit_card.manual    = true;
+  }
+
+  /* AFT: both objects are required together — one alone is a config error. */
+  if (scene === 'wallet'){
+    cfg.sender    = { ...AFT_SENDER };
+    cfg.recipient = { ...AFT_RECIPIENT };
+  }
+
+  if (optApplePay){
+    cfg.apple_pay = {
+      country: 'SA',
+      label: label,
+      validate_merchant_url: 'https://api.moyasar.com/v1/applepay/initiate',
+    };
+  }
+
+  /* Surface whatever Moyasar actually complains about, instead of a blank box. */
+  cfg.on_failure = async function(error){
+    const msg = typeof error === 'string' ? error : JSON.stringify(error);
+    console.error('[demo] Moyasar on_failure:', error);
+    lastError = msg;
+    diag([
+      `<code style="font-family:var(--mono);font-size:12px">${msg}</code>`,
+      (optManual || optSaveCard)
+        ? `<br>${lang==='ar'
+            ? 'إذا ظهر هذا فقط عند تفعيل «حجز المبلغ» أو «حفظ البطاقة»، فغالباً الميزة غير مفعّلة على حسابك — تواصل مع فريق موياسر لتفعيلها.'
+            : 'If this only happens with <strong>Authorize only</strong> or <strong>Save card</strong> switched on, the feature is probably not enabled on your merchant account — ask Moyasar support to activate it.'}`
+        : ''
+    ]);
+  };
+
+  cfg.on_completed = async function(payment){
+    console.log('[demo] payment created:', payment);
+    try{
+      if (payment && payment.source && payment.source.token){
+        sessionStorage.setItem('demo_token', payment.source.token);
+      }
+      if (payment && payment.status){
+        sessionStorage.setItem('demo_status', payment.status);
+      }
+      /* The hold is real at this point — let the hotel flow show step 1 done
+         when the customer comes back from the bank. */
+      if (scene === 'hotel') sessionStorage.setItem('demo_hotel', '1');
+    } catch(e){ /* storage unavailable — not critical */ }
+  };
+
+  return cfg;
+}
+
+function renderOpts(){
+  const html = `
+    <span class="opts-label">${t('optsLabel')}</span>
+    <label class="opt ${optSaveCard?'on':''}">
+      <input type="checkbox" data-opt="save" ${optSaveCard?'checked':''}>${t('optSave')}
+    </label>
+    <label class="opt ${optManual?'on':''}">
+      <input type="checkbox" data-opt="manual" ${optManual?'checked':''}>${t('optManual')}
+    </label>
+    <label class="opt ${optApplePay?'on':''}">
+      <input type="checkbox" data-opt="applepay" ${optApplePay?'checked':''}>${t('optApplePay')}
+    </label>
+    <label class="opt ${optMetadata?'on':''}">
+      <input type="checkbox" data-opt="metadata" ${optMetadata?'checked':''}>${t('optMetadata')}
+    </label>
+    ${optApplePay ? `<div class="opt-note">${t('applePayNote')}</div>` : ''}
+    ${optManual   ? `<div class="opt-note">${t('manualNote')}</div>`   : ''}
+    ${optSaveCard ? `<div class="opt-note">${t('saveNote')}</div>`     : ''}
+    ${optMetadata ? `
+      <div class="meta-editor">
+        <div class="meta-head">${t('metaTitle')}</div>
+        ${meta.map((r,i)=>`
+          <div class="meta-pair">
+            <input class="meta-k" data-meta="k" data-i="${i}" value="${esc(r.k)}" spellcheck="false" aria-label="key">
+            <input class="meta-v" data-meta="v" data-i="${i}" value="${esc(r.v)}" spellcheck="false" aria-label="value">
+          </div>`).join('')}
+        <div class="opt-note" style="margin-top:6px">${t('metaNote')}</div>
+      </div>` : ''}`;
+
+  const a = $('#optsStore'), b = $('#optsInv');
+  if (a) a.innerHTML = html;
+  if (b) b.innerHTML = html;
+}
+
+function renderDev(){
+  if (!devOpen) return;
+  const { amount, desc, currency } = currentConfig();
+  const keyShown = keyReady() ? PUBLISHABLE_KEY.slice(0,12) + '…' : 'pk_test_…';
+  const origin = callbackUrl();
+  const scopeBadge = `<div class="scope">${esc(t('scopeAgg'))}</div>`;
+  const methodsLine = optApplePay
+    ? `[<span class="s">'creditcard'</span>, <span class="s">'applepay'</span>]`
+    : `[<span class="s">'creditcard'</span>]`;
+
+  const manualOn = optManual || scene === 'hotel';
+  let ccBlock = '';
+  if (optSaveCard || manualOn){
+    const rows = [];
+    if (optSaveCard) rows.push(`    <span class="p">save_card</span>: <span class="k">true</span>,   <span class="c">// returns a token</span>`);
+    if (manualOn)    rows.push(`    <span class="p">manual</span>: <span class="k">true</span>,      <span class="c">// authorize only</span>`);
+    ccBlock = `\n  <span class="p">credit_card</span>: {\n${rows.join('\n')}\n  },`;
+  }
+
+  let mdBlock = '';
+  if (optMetadata){
+    const rows = meta.filter(r=>r.k.trim() && r.v.trim())
+      .map(r=>`    <span class="s">'${r.k.trim()}'</span>: <span class="s">'${r.v.trim()}'</span>,`);
+    if (rows.length) mdBlock = `\n  <span class="p">metadata</span>: {\n${rows.join('\n')}\n  },`;
+  }
+
+  /* AFT — both objects, every required field, stcpay excluded. */
+  let aftBlock = '';
+  if (scene === 'wallet'){
+    aftBlock = `
+  <span class="c">// AFT — both objects are required together</span>
+  <span class="p">sender</span>: {
+    <span class="p">first_name</span>: <span class="s">'${AFT_SENDER.first_name}'</span>,
+    <span class="p">last_name</span>: <span class="s">'${AFT_SENDER.last_name}'</span>,
+    <span class="p">address</span>: <span class="s">'${AFT_SENDER.address}'</span>,
+    <span class="p">id_type</span>: <span class="s">'${AFT_SENDER.id_type}'</span>,  <span class="c">// NTID | PASN | CPNY</span>
+    <span class="p">id</span>: <span class="s">'${AFT_SENDER.id}'</span>,
+    <span class="p">phone_number</span>: <span class="s">'${AFT_SENDER.phone_number}'</span>,
+  },
+  <span class="p">recipient</span>: {
+    <span class="p">first_name</span>: <span class="s">'${AFT_RECIPIENT.first_name}'</span>,
+    <span class="p">last_name</span>: <span class="s">'${AFT_RECIPIENT.last_name}'</span>,
+    <span class="p">address</span>: <span class="s">'${AFT_RECIPIENT.address}'</span>,
+  },`;
+  }
+
+  let apBlock = '';
+  if (optApplePay){
+    apBlock = `
+  <span class="p">apple_pay</span>: {
+    <span class="p">country</span>: <span class="s">'SA'</span>,
+    <span class="p">label</span>: <span class="s">'${scene==='store' ? ($('#storeName').value.trim()||'Store') : $('#invIssuer').textContent}'</span>,
+    <span class="p">validate_merchant_url</span>:
+      <span class="s">'https://api.moyasar.com/v1/applepay/initiate'</span>,
+  },`;
+  }
+
+  const minorNote = CCY[currency].exp === 3
+    ? `fils (3 decimals) — ${(amount/1000).toFixed(3)} ${currency}`
+    : `the minor unit — ${(amount/100).toFixed(2)} ${currency}`;
+
+  const views = {
+    /* SADAD is issued server-side; there is no browser form to show. */
+    init: scene === 'sadad' ? `
+<div class="dev-note">${t('sdNote')}</div>
+<pre><span class="c">// server — secret key, never the browser</span>
+<span class="k">await</span> <span class="p">fetch</span>(<span class="s">'https://api.moyasar.com/v1/payments'</span>,{
+  <span class="p">method</span>: <span class="s">'POST'</span>,
+  <span class="p">headers</span>:{ <span class="p">Authorization</span>:
+    <span class="s">'Basic '</span>+<span class="p">btoa</span>(<span class="s">'sk_test_…:'</span>) },
+  <span class="p">body</span>: <span class="k">new</span> <span class="p">URLSearchParams</span>({
+    <span class="p">amount</span>: <span class="n">${amount}</span>,
+    <span class="p">currency</span>: <span class="s">'SAR'</span>,   <span class="c">// SADAD is SAR only</span>
+    <span class="p">description</span>: <span class="s">'${esc(desc)}'</span>,
+    <span class="s">'source[type]'</span>: <span class="s">'sadad'</span>
+  })
+});
+
+<span class="c">// the source that comes back</span>
+{ <span class="p">status</span>: <span class="s">'initiated'</span>,
+  <span class="p">source</span>: {
+    <span class="p">sadad_number</span>: <span class="s">'…'</span>,
+    <span class="p">provider_name</span>: <span class="s">'…'</span>,
+    <span class="p">biller_code</span>: <span class="s">'…'</span>,
+    <span class="p">gateway_id</span>: <span class="s">'…'</span>,
+    <span class="p">expired_at</span>: <span class="s">'…'</span>   <span class="c">// 29 days max</span>
+}}
+
+<span class="c">// initiated → paid | expired | failed</span></pre>
+<div class="dev-warn">${t('sdWarn')}</div>
+<!-- VERIFY: the exact source type string for a SADAD bill, and whether the
+     payment form accepts 'sadad' in its methods array, from
+     https://docs.moyasar.com — SADAD bill guide. -->` : `
+<div class="dev-note">${lang==='ar'
+  ? 'هذه هي الإعدادات الفعلية المُرسلة إلى نموذج موياسر الآن. غيّر السلة أو الخيارات وشاهدها تتحدث مباشرة.'
+  : 'The exact config being sent to the Moyasar form right now. Change the cart or the options and watch it update live.'}</div>
+<pre>&lt;<span class="k">script</span> <span class="p">src</span>=<span class="s">"vendor/moyasar.umd.js"</span>&gt;&lt;/<span class="k">script</span>&gt;
+<span class="c">// v${MYSR_VERSION}, served from the repo — no CDN at demo time</span>
+
+<span class="k">Moyasar</span>.<span class="p">init</span>({
+  <span class="p">element</span>: <span class="s">'.mysr-form'</span>,
+
+  <span class="c">// amount is in ${minorNote}</span>
+  <span class="p">amount</span>: <span class="n">${amount}</span>,
+  <span class="p">currency</span>: <span class="s">'${currency}'</span>,
+  <span class="p">description</span>: <span class="s">'${esc(desc)}'</span>,
+
+  <span class="p">publishable_api_key</span>: <span class="s">'${keyShown}'</span>,
+  <span class="p">callback_url</span>: <span class="s">'${origin}'</span>,
+
+  <span class="p">methods</span>: ${methodsLine},
+  <span class="p">supported_networks</span>: [<span class="s">'mada'</span>, <span class="s">'visa'</span>,
+                       <span class="s">'mastercard'</span>],
+  <span class="p">language</span>: <span class="s">'${lang}'</span>,${mdBlock}${ccBlock}${aftBlock}${apBlock}
+});</pre>${scene === 'wallet' ? `<div class="dev-warn">${t('aftDevWarn')}</div>` : ''}${
+  currency !== 'SAR' ? scopeBadge : ''}`,
+
+    capture: scene === 'hotel' ? `
+<div class="dev-note">${t('capPartialNote')}</div>
+<pre><span class="c">// 1 — authorize on arrival (browser)</span>
+<span class="p">amount</span>: <span class="n">${HOTEL_AUTH}</span>,              <span class="c">// SAR 500.00 held</span>
+<span class="p">credit_card</span>: { <span class="p">manual</span>: <span class="k">true</span> }
+<span class="c">//    payment.status === 'authorized'</span>
+
+<span class="c">// 2 — capture only what they spent (server)</span>
+<span class="k">await</span> <span class="p">fetch</span>(
+  <span class="s">\`https://api.moyasar.com/v1/payments/\${id}/capture\`</span>,
+  { <span class="p">method</span>: <span class="s">'POST'</span>,
+    <span class="p">headers</span>: { <span class="p">Authorization</span>:
+      <span class="s">'Basic '</span> + <span class="p">btoa</span>(<span class="s">'sk_test_…:'</span>) },
+    <span class="p">body</span>: <span class="k">new</span> <span class="p">URLSearchParams</span>({
+      <span class="p">amount</span>: <span class="n">${HOTEL_TAKE}</span>         <span class="c">// SAR 380.00 of 500.00</span>
+    })}
+);
+<span class="c">//    payment.status === 'captured'</span>
+
+<span class="c">// 3 — the remaining ${HOTEL_AUTH - HOTEL_TAKE} (SAR ${((HOTEL_AUTH-HOTEL_TAKE)/100).toFixed(2)}) is</span>
+<span class="c">//     released by capturing less. No void call,</span>
+<span class="c">//     no refund, no fee.</span></pre>
+<div class="dev-note">${t('capRules')}</div>
+<div class="dev-warn" style="margin-bottom:0">${t('capServerOnly')}</div>` : `
+<div class="dev-note">${lang==='ar'
+  ? 'مع <strong>manual: true</strong> يتم حجز المبلغ فقط. التحصيل يتم من الخادم لاحقاً بالمفتاح السري.'
+  : 'With <strong>manual: true</strong> the funds are only held. Capture happens later from your server using the secret key.'}</div>
+<pre><span class="c">// 1 — authorize (browser, publishable key)</span>
+<span class="p">credit_card</span>: { <span class="p">manual</span>: <span class="k">true</span> }
+<span class="c">//    payment.status === 'authorized'</span>
+
+<span class="c">// 2 — capture (server, secret key)</span>
+<span class="k">await</span> <span class="p">fetch</span>(
+  <span class="s">\`https://api.moyasar.com/v1/payments/\${id}/capture\`</span>,
+  { <span class="p">method</span>: <span class="s">'POST'</span>,
+    <span class="p">headers</span>: { <span class="p">Authorization</span>:
+      <span class="s">'Basic '</span> + <span class="p">btoa</span>(<span class="s">'sk_test_…:'</span>) },
+    <span class="p">body</span>: <span class="k">new</span> <span class="p">URLSearchParams</span>({
+      <span class="p">amount</span>: <span class="n">${amount}</span>   <span class="c">// or less, for partial</span>
+    })}
+);
+
+<span class="c">// to release instead of charging:</span>
+<span class="c">// POST /v1/payments/{id}/void</span></pre>
+<div class="dev-note">${t('capRules')}</div>
+<div class="dev-warn" style="margin-bottom:0">${t('capServerOnly')}</div>`,
+
+    voidrefund: `
+<div class="dev-note">${t('vrLead')}</div>
+<div class="cmp-wrap"><table class="cmp">
+<tr><th>${esc(t('vrColWhat'))}</th><th>${esc(t('vrColVoid'))}</th><th>${esc(t('vrColRefund'))}</th></tr>
+<tr><td>${esc(t('vrRowCost'))}</td><td class="yes">${esc(t('vrCostV'))}</td><td class="no">${esc(t('vrCostR'))}</td></tr>
+<tr><td>${esc(t('vrRowSpeed'))}</td><td class="yes">${esc(t('vrSpeedV'))}</td><td>${esc(t('vrSpeedR'))}</td></tr>
+<tr><td>${esc(t('vrRowWindow'))}</td><td>${t('vrWindowV')}</td><td>${t('vrWindowR')}</td></tr>
+<tr><td>${esc(t('vrRowBal'))}</td><td class="yes">${esc(t('vrBalV'))}</td><td>${esc(t('vrBalR'))}</td></tr>
+<tr><td>${esc(t('vrRowStatus'))}</td><td><code>${esc(t('vrStatusV'))}</code></td><td><code>${esc(t('vrStatusR'))}</code></td></tr>
+</table></div>
+<pre><span class="c">// release a hold, or reverse a very recent charge</span>
+<span class="k">await</span> <span class="p">fetch</span>(
+  <span class="s">\`https://api.moyasar.com/v1/payments/\${id}/void\`</span>,
+  { <span class="p">method</span>: <span class="s">'POST'</span>,
+    <span class="p">headers</span>: { <span class="p">Authorization</span>:
+      <span class="s">'Basic '</span> + <span class="p">btoa</span>(<span class="s">'sk_test_…:'</span>) }}
+);
+
+<span class="c">// give money back after the void window closed</span>
+<span class="k">await</span> <span class="p">fetch</span>(
+  <span class="s">\`https://api.moyasar.com/v1/payments/\${id}/refund\`</span>,
+  { <span class="p">method</span>: <span class="s">'POST'</span>,
+    <span class="p">headers</span>: { <span class="p">Authorization</span>:
+      <span class="s">'Basic '</span> + <span class="p">btoa</span>(<span class="s">'sk_test_…:'</span>) },
+    <span class="p">body</span>: <span class="k">new</span> <span class="p">URLSearchParams</span>({
+      <span class="p">amount</span>: <span class="n">${amount}</span>  <span class="c">// omit for a full refund</span>
+    })}
+);</pre>
+<div class="dev-warn" style="margin-bottom:0">${t('vrServer')}</div>`,
+
+    webhooks: `
+<div class="dev-note">${t('whNote')}</div>
+<pre><span class="c">// POST to your endpoint</span>
+{
+  <span class="p">type</span>: <span class="s">'payment_paid'</span>,
+  <span class="p">created_at</span>: <span class="s">'2026-10-07T12:04:51Z'</span>,
+  <span class="p">secret_token</span>: <span class="s">'…your Secret Token…'</span>,
+  <span class="p">data</span>: {
+    <span class="p">id</span>: <span class="s">'3e2b7f44-…-9c1a'</span>,
+    <span class="p">status</span>: <span class="s">'paid'</span>,
+    <span class="p">amount</span>: <span class="n">${amount}</span>,
+    <span class="p">currency</span>: <span class="s">'${currency}'</span>,
+    <span class="p">description</span>: <span class="s">'${esc(desc)}'</span>,
+    <span class="p">metadata</span>: { <span class="p">order_id</span>: <span class="s">'ORD-10039'</span> }
+  }
+}
+
+<span class="c">// your handler, in the right order</span>
+<span class="p">app</span>.<span class="p">post</span>(<span class="s">'/moyasar-hook'</span>, (req, res) =&gt; {
+  <span class="k">if</span> (req.body.secret_token !== <span class="p">process</span>.env.MYSR_HOOK)
+    <span class="k">return</span> res.<span class="p">sendStatus</span>(<span class="n">401</span>);
+
+  res.<span class="p">sendStatus</span>(<span class="n">200</span>);   <span class="c">// FIRST — then work</span>
+  <span class="p">queue</span>.<span class="p">add</span>(<span class="s">'fulfil'</span>, req.body.data);
+});</pre>
+<div class="dev-note">${t('whValidate')}</div>
+<div class="dev-note" style="margin-bottom:6px"><strong>${esc(t('whRetryTitle'))}</strong></div>
+<div class="cmp-wrap"><table class="cmp">
+<tr><th>${esc(t('whCol1'))}</th><th>${esc(t('whCol2'))}</th></tr>
+<tr><td>1</td><td>${esc(t('whNow'))}</td></tr>
+<tr><td>2</td><td><code>+1 min</code></td></tr>
+<tr><td>3</td><td><code>+10 min</code></td></tr>
+<tr><td>4</td><td><code>+30 min</code></td></tr>
+<tr><td>5</td><td><code>+1 hour</code></td></tr>
+<tr><td>6</td><td><code>+2 hours</code></td></tr>
+<tr><td class="no">—</td><td class="no">${esc(t('whDropped'))}</td></tr>
+</table></div>
+<div class="dev-warn">${t('whTruth')}</div>
+<div class="dev-note" style="margin-bottom:0"><strong>${esc(t('whEvents'))}:</strong>
+<code>payment_paid</code>, <code>payment_failed</code>, <code>payment_voided</code>,
+<code>payment_authorized</code>, <code>payment_captured</code>, <code>payment_refunded</code>,
+<code>payment_abandoned</code>, <code>payment_verified</code>,
+<code>card_auth_authenticated</code>, <code>card_auth_failed</code>,
+<code>balance_transferred</code>.</div>`,
+
+    settlement: `
+<div class="dev-note">${t('stNote')}</div>
+<pre><span class="c">// server — secret key</span>
+<span class="k">const</span> res = <span class="k">await</span> <span class="p">fetch</span>(
+  <span class="s">'https://api.moyasar.com/v1/transfers'</span>,
+  { <span class="p">headers</span>: { <span class="p">Authorization</span>:
+      <span class="s">'Basic '</span> + <span class="p">btoa</span>(<span class="s">'sk_test_…:'</span>) }}
+);
+<span class="c">// 40 per page · GET /v1/transfers/{id} for one</span></pre>
+<div class="dev-note" style="margin-bottom:6px"><strong>${esc(t('stCsvTitle'))}</strong></div>
+<div class="cmp-wrap"><table class="csv">
+<tr>
+  <th>payment_id</th><th>description</th><th>scheme</th><th>source</th>
+  <th>type</th><th>currency</th><th>amount</th><th>net_amount</th>
+  <th>fee</th><th>vat</th><th>total_fee</th><th>transaction_date</th>
+  <th class="meta-col">order_id</th>
+</tr>
+<tr>
+  <td>3e2b7f44…</td><td>${esc(String(desc).slice(0,22))}</td><td>mada</td><td>creditcard</td>
+  <td>pay</td><td>${currency}</td><td>${(amount/Math.pow(10,CCY[currency].exp)).toFixed(CCY[currency].exp)}</td>
+  <td>—</td><td>—</td><td>—</td><td>—</td><td>2026-10-07T12:04:51Z</td>
+  <td class="meta-col">ORD-10039</td>
+</tr>
+<tr>
+  <td>a71c9d02…</td><td>Wallet top-up</td><td>visa</td><td>creditcard</td>
+  <td>pay</td><td>SAR</td><td>100.00</td>
+  <td>—</td><td>—</td><td>—</td><td>—</td><td>2026-10-07T12:11:08Z</td>
+  <td class="meta-col">ORD-10040</td>
+</tr>
+<tr>
+  <td>a71c9d02…</td><td>Wallet top-up</td><td>visa</td><td>creditcard</td>
+  <td>refund</td><td>SAR</td><td>-100.00</td>
+  <td>—</td><td>—</td><td>—</td><td>—</td><td>2026-10-07T15:40:22Z</td>
+  <td class="meta-col">ORD-10040</td>
+</tr>
+</table></div>
+<div class="dev-note">${t('stFeeNote')}</div>
+<div class="dev-note">${t('stPoint')}</div>
+<div class="dev-note" style="margin-bottom:0">${t('stTypes')}</div>`,
+
+    splits: `
+${scopeBadge}
+<div class="dev-note">${t('splNote')}</div>
+<pre><span class="c">// SAR 100 — seller keeps 95, platform takes 5</span>
+<span class="p">amount</span>: <span class="n">10000</span>,
+<span class="p">splits</span>: [
+  { <span class="p">recipient_id</span>: <span class="s">'rec_seller_8831'</span>,
+    <span class="p">amount</span>: <span class="n">9500</span>,
+    <span class="p">description</span>: <span class="s">'Seller payout'</span>,
+    <span class="p">reference</span>: <span class="s">'ORD-10039'</span> },
+
+  { <span class="p">recipient_id</span>: <span class="s">'rec_platform_0001'</span>,
+    <span class="p">amount</span>: <span class="n">500</span>,
+    <span class="p">description</span>: <span class="s">'Platform commission'</span>,
+    <span class="p">fee_source</span>: <span class="k">true</span> }
+]
+<span class="c">// 9500 + 500 === 10000 ✓</span>
+<span class="c">// fee_source: true → the platform absorbs</span>
+<span class="c">// the gateway fee, not the seller</span></pre>
+<div class="dev-note" style="margin-bottom:6px"><strong>${esc(t('splRulesTitle'))}</strong></div>
+<div class="dev-note" style="margin-bottom:4px">1 · ${t('splRule1')}</div>
+<div class="dev-note" style="margin-bottom:4px">2 · ${t('splRule2')}</div>
+<div class="dev-note" style="margin-bottom:4px">3 · ${t('splRule3')}</div>
+<div class="dev-note" style="margin-bottom:0">4 · ${t('splRule4')}</div>`,
+
+    intents: `
+<div class="dev-note">${t('intNote')}</div>
+<pre><span class="c">// 1 — server creates the intent (secret key)</span>
+<span class="k">const</span> intent = <span class="k">await</span> <span class="p">createIntent</span>({
+  <span class="p">amount</span>: <span class="n">${amount}</span>,
+  <span class="p">currency</span>: <span class="s">'${currency}'</span>,
+  <span class="p">description</span>: <span class="s">'${esc(desc)}'</span>,
+  <span class="p">callback_url</span>: <span class="s">'${origin}'</span>
+});
+<span class="c">// → { client_secret: '…single use…' }</span>
+
+<span class="c">// 2 — browser fulfils it (publishable key)</span>
+<span class="k">Moyasar</span>.<span class="p">init</span>({
+  <span class="p">element</span>: <span class="s">'.mysr-form'</span>,
+  <span class="p">client_secret</span>: intent.client_secret,
+  <span class="p">publishable_api_key</span>: <span class="s">'${keyShown}'</span>
+});
+<span class="c">// amount is NOT set here — the server fixed it</span></pre>
+<div class="dev-warn" style="margin-bottom:0">${t('intWhy')}</div>
+<!-- VERIFY: the exact parameter name the payment form expects for a payment
+     intent's client secret, from https://docs.moyasar.com — Payment Intents
+     guide. 'client_secret' is used here as the most likely name. --><div class="scope" style="margin-top:12px">${esc(t('verifyIntent'))}</div>`,
+
+    metadata: `
+<div class="dev-note">${lang==='ar'
+  ? '<strong>metadata</strong> يضيف حقولاً خاصة بك إلى كل عملية، وتصبح قابلة للبحث في لوحة التحكم.'
+  : '<strong>metadata</strong> attaches your own fields to every payment. They become searchable key/value pairs in the dashboard.'}</div>
+<pre><span class="k">Moyasar</span>.<span class="p">init</span>({
+  <span class="c">// …</span>
+  <span class="p">metadata</span>: {
+    <span class="s">'order_id'</span>: <span class="s">'ORD-10039'</span>,
+    <span class="s">'branch'</span>: <span class="s">'Riyadh — Olaya'</span>,
+    <span class="s">'customer_id'</span>: <span class="s">'CUST-4471'</span>,
+  }
+});
+
+<span class="c">// comes back on the payment object</span>
+{
+  <span class="p">id</span>: <span class="s">'3e2b7f44-…'</span>,
+  <span class="p">status</span>: <span class="s">'paid'</span>,
+  <span class="p">metadata</span>: {
+    <span class="p">order_id</span>: <span class="s">'ORD-10039'</span>, <span class="c">// …</span>
+  }
+}</pre>
+<div class="dev-note" style="margin-bottom:0">${lang==='ar'
+  ? 'الاستخدام العملي: مطابقة المدفوعات بأرقام الطلبات تلقائياً، وتصفية المبيعات حسب الفرع، وربط كل عملية بالعميل — دون قاعدة بيانات إضافية.'
+  : 'What it is for: reconciling payments to order numbers automatically, filtering sales by branch, and tying every transaction back to a customer — without a separate lookup table.'}</div>`,
+
+    token: `
+<div class="dev-note">${lang==='ar'
+  ? 'مع <strong>save_card: true</strong> تُعاد بطاقة محفوظة كـ token في استجابة الدفع، جاهزة للاستخدام المتكرر.'
+  : 'With <strong>save_card: true</strong> the payment response returns a token you can charge again later.'}</div>
+<pre><span class="c">// 1 — save during payment (browser)</span>
+<span class="p">credit_card</span>: { <span class="p">save_card</span>: <span class="k">true</span> }
+
+<span class="c">// response contains:</span>
+{ <span class="p">source</span>: {
+    <span class="p">token</span>: <span class="s">'token_xxxxxxxx'</span>,
+    <span class="p">transaction_url</span>: <span class="s">'…3DS…'</span>
+}}
+
+<span class="c">// 2 — charge the token later (server)</span>
+<span class="k">await</span> <span class="p">fetch</span>(<span class="s">'https://api.moyasar.com/v1/payments'</span>,{
+  <span class="p">method</span>: <span class="s">'POST'</span>,
+  <span class="p">headers</span>:{ <span class="p">Authorization</span>:
+    <span class="s">'Basic '</span>+<span class="p">btoa</span>(<span class="s">'sk_test_…:'</span>) },
+  <span class="p">body</span>: <span class="k">new</span> <span class="p">URLSearchParams</span>({
+    <span class="p">amount</span>: <span class="n">${amount}</span>,
+    <span class="p">currency</span>: <span class="s">'SAR'</span>,
+    <span class="s">'source[type]'</span>: <span class="s">'token'</span>,
+    <span class="s">'source[token]'</span>: <span class="s">'token_xxxxxxxx'</span>
+  })
+});</pre>
+<div class="dev-note">${lang==='ar'
+  ? '<strong>حالات التوكن:</strong> initiated ← active بعد 3DS، ثم inactive أو expired عند انتهاء البطاقة.'
+  : '<strong>Token statuses:</strong> <code>initiated</code> → <code>active</code> after 3DS, then <code>inactive</code> or <code>expired</code> when the card lapses.'}</div>
+<div class="dev-warn" style="margin-bottom:0">${lang==='ar'
+  ? 'التوكنايزيشن يجب تفعيله على الحساب أولاً — تواصل مع مدير الحساب أو فريق موياسر.'
+  : 'Tokenization must be enabled on the merchant account before it works — Moyasar\'s own docs say to ask your account manager to activate it.'}</div>`,
+
+    wallets: `
+<div class="dev-note">${lang==='ar'
+  ? 'محافظ الدفع تحتاج إعداداً إضافياً خارج الكود.'
+  : 'Wallets need setup outside the code before they render.'}</div>
+<pre><span class="c">// Apple Pay — Safari on Apple devices only</span>
+<span class="p">methods</span>: [<span class="s">'creditcard'</span>, <span class="s">'applepay'</span>],
+<span class="p">apple_pay</span>: {
+  <span class="p">country</span>: <span class="s">'SA'</span>,
+  <span class="p">label</span>: <span class="s">'Your store name'</span>,
+  <span class="p">validate_merchant_url</span>:
+    <span class="s">'https://api.moyasar.com/v1/applepay/initiate'</span>,
+},
+
+<span class="c">// Samsung Pay — Samsung devices only</span>
+<span class="p">methods</span>: [<span class="s">'creditcard'</span>, <span class="s">'samsungpay'</span>],
+<span class="p">samsung_pay</span>: {
+  <span class="p">service_id</span>: <span class="s">'…from Samsung dashboard…'</span>,
+  <span class="p">order_number</span>: <span class="s">'ORD-1001'</span>,
+  <span class="p">country_code</span>: <span class="s">'SA'</span>,
+  <span class="p">environment</span>: <span class="s">'STAGE'</span>,  <span class="c">// or PRODUCTION</span>
+},</pre>
+<div class="dev-warn">${lang==='ar'
+  ? '<strong>أبل باي:</strong> سجّل النطاق في لوحة موياسر أولاً (Web Registration).<br><strong>سامسونج باي:</strong> يتطلب حساب مطوّر سامسونج و Service ID، ويعمل على أجهزة سامسونج فقط.'
+  : '<strong>Apple Pay:</strong> register this domain in the Moyasar dashboard first (Web Registration — no Apple Developer account needed).<br><br><strong>Samsung Pay:</strong> needs a Samsung Developer account, partner approval and a Service ID. It only renders on Samsung devices, so it will not appear on this laptop.'}</div>`,
+
+    callback: `
+<div class="dev-note">${lang==='ar'
+  ? 'بعد إتمام الدفع يعيد موياسر توجيه العميل إلى <strong>callback_url</strong> مع معرّف العملية في الرابط.'
+  : 'After payment, Moyasar redirects the customer to your <strong>callback_url</strong> with the payment id in the query string.'}</div>
+<pre><span class="c">// The customer lands back on:</span>
+${origin}
+  ?<span class="p">id</span>=<span class="s">3e2b7f44-…-9c1a</span>
+  &amp;<span class="p">status</span>=<span class="s">paid</span>
+  &amp;<span class="p">message</span>=<span class="s">APPROVED</span>
+
+<span class="c">// Read it on the page:</span>
+<span class="k">const</span> params = <span class="k">new</span> <span class="p">URLSearchParams</span>(location.search);
+<span class="k">const</span> paymentId = params.<span class="p">get</span>(<span class="s">'id'</span>);</pre>
+<div class="dev-warn">${lang==='ar'
+  ? 'لا تعتمد على <strong>status</strong> في الرابط لتأكيد الطلب. يجب التحقق من الخادم — انظر تبويب «التحقق».'
+  : 'Never trust the <strong>status</strong> in the URL to confirm an order. Verify server-side — see the Verify tab.'}</div>`,
+
+    verify: `
+<div class="dev-note">${lang==='ar'
+  ? 'الخطوة الأخيرة تتم على الخادم باستخدام المفتاح السري. هذه الخطوة غير موجودة في هذا العرض لأن المفتاح السري لا يوضع أبداً في صفحة ويب.'
+  : 'The final step runs on your server using the secret key. It is deliberately absent from this demo — a secret key must never sit in a web page.'}</div>
+<pre><span class="c">// Node.js — on your backend</span>
+<span class="k">const</span> res = <span class="k">await</span> <span class="p">fetch</span>(
+  <span class="s">\`https://api.moyasar.com/v1/payments/\${paymentId}\`</span>,
+  { <span class="p">headers</span>: {
+      <span class="p">Authorization</span>: <span class="s">'Basic '</span> +
+        <span class="p">btoa</span>(<span class="s">'sk_test_…:'</span>)
+  }}
+);
+<span class="k">const</span> payment = <span class="k">await</span> res.<span class="p">json</span>();
+
+<span class="k">if</span> (payment.status === <span class="s">'paid'</span> &amp;&amp;
+    payment.amount === <span class="n">${amount}</span> &amp;&amp;
+    payment.currency === <span class="s">'SAR'</span>) {
+  <span class="c">// safe to fulfil the order</span>
+}</pre>`
+  };
+
+  $('#devBody').innerHTML = views[devTab] || views.init;
+}
+
+/* ── checkout ── */
+function diag(lines){
+  $('#mysrForm').innerHTML =
+    `<div style="font-size:13px;line-height:1.7;color:var(--ink)">
+       <div style="font-weight:600;color:var(--danger);margin-bottom:8px">
+         ${lang==='ar' ? 'لم يتم تحميل نموذج الدفع' : 'The payment form did not load'}
+       </div>
+       <div style="color:var(--ink-soft)">${lines.join('<br>')}</div>
+     </div>`;
+}
+
+async function openCheckout(){
+  if (keyIsLive()){
+    toast(t('blockedToast')); $('#blocked').classList.remove('hide'); return;
+  }
+  if (!keyReady()){ toast(t('keyMissing')); $('#notice').classList.remove('hide'); return; }
+
+  /* Remember where we were, so returning from the 3DS redirect lands back
+     on the same scene instead of the store. */
+  try{ sessionStorage.setItem('demo_scene', scene); }catch(e){}
+
+  const { amount, desc } = currentConfig();
+  $('#sheetAmount').textContent = money(amount);
+  $('#sheetBg').classList.add('open');
+
+  lastError = null;
+  const host = $('#mysrForm');
+  host.innerHTML = `<div style="text-align:center;padding:26px 0;color:var(--muted);font-size:13px">
+      ${lang==='ar' ? 'جارٍ تحميل نموذج الدفع…' : 'Loading the payment form…'}
+    </div>`;
+  formMounted = false;
+
+  const ready = await ensureMoyasar();
+  if (!ready){
+    diag([
+      'The Moyasar library could not be loaded from any CDN.',
+      'Check your internet connection, then reload the page.'
+    ]);
+    return;
+  }
+
+  host.innerHTML = '';
+
+  const config = moyasarConfig();
+
+  console.log('[demo] Moyasar.init', { ...config, publishable_api_key: PUBLISHABLE_KEY.slice(0,14)+'…' });
+
+  try{
+    Moyasar.init(config);
+    formMounted = true;
+  } catch(err){
+    console.error('[demo] Moyasar.init threw', err);
+    diag([`<code style="font-family:var(--mono);font-size:12px">${err.message}</code>`]);
+    return;
+  }
+
+  // Moyasar renders asynchronously — confirm something actually appeared.
+  setTimeout(()=>{
+    if (lastError) return;               // on_failure already explained it
+    if (host.children.length > 0) return; // form rendered fine
+    console.warn('[demo] form container still empty after init');
+
+    const extras = [];
+    if (optManual)   extras.push(lang==='ar'
+      ? 'جرّب إيقاف <strong>حجز المبلغ فقط</strong> — قد تكون ميزة الحجز غير مفعّلة على حسابك.'
+      : 'Try switching off <strong>Authorize only</strong> — manual capture often has to be enabled on your merchant account first.');
+    if (optSaveCard) extras.push(lang==='ar'
+      ? 'جرّب إيقاف <strong>حفظ البطاقة</strong> — قد يكون التوكن غير مفعّل على حسابك.'
+      : 'Try switching off <strong>Save card</strong> — tokenization may not be enabled on your account.');
+    if (optApplePay) extras.push(lang==='ar'
+      ? 'أبل باي يحتاج تسجيل النطاق في لوحة موياسر، ويعمل في سفاري فقط.'
+      : 'Apple Pay needs this domain registered in the Moyasar dashboard, and only renders in Safari.');
+
+    if (!extras.length){
+      extras.push(lang==='ar'
+        ? 'تحقّق من مفتاح النشر — يجب أن يبدأ بـ <code>pk_test_</code>.'
+        : 'Check the publishable key — it should start with <code>pk_test_</code>.');
+    }
+    extras.push(lang==='ar'
+      ? 'افتح وحدة التحكم في المتصفح لرؤية الخطأ الدقيق.'
+      : 'Open the browser console for the exact error.');
+
+    diag(extras);
+  }, 1800);
+}
+function closeCheckout(){
+  $('#sheetBg').classList.remove('open');
+  $('#mysrForm').innerHTML = '';
+}
+
+/* ── result from callback ── */
+function checkCallback(){
+  const q = new URLSearchParams(location.search);
+  const id = q.get('id');
+  if (!id) return false;
+
+  const status  = q.get('status') || '';
+  const message = q.get('message') || '';
+  const amount  = q.get('amount');
+  const token   = q.get('token') || q.get('source[token]');
+  const paid = status === 'paid' || status === 'authorized';
+
+  $('#sceneStore').classList.add('hide');
+  $('#sceneInvoice').classList.add('hide');
+  $('#result').classList.remove('hide');
+
+  $('#resultMark').className = 'result-mark ' + (paid ? 'ok' : 'fail');
+  $('#resultMark').textContent = paid ? '✓' : '✕';
+  $('#resultTitle').textContent = paid ? t('paidTitle') : t('failTitle');
+  $('#resultText').textContent  = paid ? t('paidText')  : t('failText');
+
+  const rows = [
+    [t('mId'), id],
+    [t('mStatus'), status + (message ? ' · ' + message : '')],
+  ];
+  let storedToken = null;
+  try{ storedToken = sessionStorage.getItem('demo_token'); }catch(e){}
+  if (amount) rows.push([t('mAmount'), (amount/100).toFixed(2) + ' SAR']);
+  if (token || storedToken) rows.push([t('mToken'), token || storedToken]);
+  try{ sessionStorage.removeItem('demo_token'); sessionStorage.removeItem('demo_status'); }catch(e){}
+  $('#resultMeta').innerHTML = rows.map(([k,v])=>
+    `<div class="meta-row"><span class="meta-key">${k}</span><span class="meta-val">${v}</span></div>`
+  ).join('');
+  return true;
+}
+
+/* ── misc ── */
+let toastTimer;
+function toast(msg){
+  const el = $('#toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>el.classList.remove('show'), 1900);
+}
+
+const SCENES = {
+  store:   '#sceneStore',
+  invoice: '#sceneInvoice',
+  sadad:   '#sceneSadad',
+  wallet:  '#sceneWallet',
+  hotel:   '#sceneHotel',
+};
+
+function setScene(next){
+  if (!SCENES[next]) next = 'store';
+  scene = next;
+  document.querySelectorAll('.tab').forEach(b=>
+    b.setAttribute('aria-selected', String(b.dataset.scene === next)));
+  for (const k in SCENES) $(SCENES[k]).classList.toggle('hide', k !== next);
+  renderOpts(); renderCcy(); renderTopups(); renderSadad(); renderHotel(); renderDev();
+}
+
+/* ── personas ──
+   Each one picks the scene and the developer tab that answers the
+   question that person actually walked in with. */
+const PERSONAS = {
+  owner:     { scene:'store',   dev:'wallets'    },
+  developer: { scene:'store',   dev:'webhooks'   },
+  finance:   { scene:'invoice', dev:'settlement' },
+};
+
+function setPersona(which){
+  const p = PERSONAS[which];
+  if (!p) return;
+  persona = which;
+  document.querySelectorAll('[data-persona]').forEach(b=>
+    b.setAttribute('aria-pressed', String(b.dataset.persona === which)));
+  setScene(p.scene);
+  setDevTab(p.dev);
+  openDev(true);
+}
+
+function setDevTab(id){
+  devTab = id;
+  document.querySelectorAll('.dev-tab').forEach(b=>
+    b.setAttribute('aria-selected', String(b.dataset.dev === devTab)));
+  const active = document.querySelector('.dev-tab[aria-selected="true"]');
+  if (active && active.scrollIntoView)
+    active.scrollIntoView({ block:'nearest', inline:'center' });
+  renderDev();
+}
+
+function openDev(on){
+  devOpen = on;
+  $('#devBtn').setAttribute('aria-pressed', String(devOpen));
+  $('#devpanel').classList.toggle('hide', !devOpen);
+  $('#shell').classList.toggle('with-panel', devOpen);
+  renderDev();
+}
+
+/* ── per-client branding from the URL ──
+   ?store=Thrive&logo=https://…&lang=ar&scene=invoice
+   Anything absent falls back to the defaults.                           */
+function applyUrlBranding(){
+  const q = new URLSearchParams(location.search);
+
+  const name = (q.get('store') || '').trim().slice(0, 40);
+  if (name){
+    brandName = name;
+    $('#storeName').value         = name;
+    $('#storeAvatar').textContent = (name[0] || 'M').toUpperCase();
+    $('#invIssuer').textContent   = name;
+    $('#sadadIssuer').textContent = name;
+    $('#walletBrand').textContent = name;
+    $('#hotelName').textContent   = name;
+  }
+
+  /* src is set as a property, never through innerHTML, and only for
+     an http(s) URL — a demo link should not be able to inject markup. */
+  const logo = (q.get('logo') || '').trim();
+  if (/^https?:\/\//i.test(logo)){
+    const img = $('#brandLogo');
+    img.src = logo;
+    img.style.filter = 'none';          // custom logos are not monochrome
+    img.onerror = () => { img.style.display = 'none'; };
+  }
+
+  const l = q.get('lang');
+  if (l === 'ar' || l === 'en') lang = l;
+
+  const s = q.get('scene');
+  return SCENES[s] ? s : null;
+}
+
+/* ── events ── */
+document.addEventListener('change', e=>{
+  const opt = e.target.closest('[data-opt]');
+  if (!opt) return;
+  const on = opt.checked;
+  if (opt.dataset.opt === 'save')     optSaveCard = on;
+  if (opt.dataset.opt === 'manual')   optManual   = on;
+  if (opt.dataset.opt === 'applepay') optApplePay = on;
+  if (opt.dataset.opt === 'metadata') optMetadata = on;
+  renderOpts();
+  renderDev();
+});
+
+document.addEventListener('click', e=>{
+  const add = e.target.closest('[data-add]');
+  if (add){ const id = add.dataset.add; cart[id] = (cart[id]||0)+1; renderCart(); return; }
+
+  const inc = e.target.closest('[data-inc]');
+  if (inc){ cart[inc.dataset.inc]++; renderCart(); return; }
+
+  const dec = e.target.closest('[data-dec]');
+  if (dec){
+    const id = dec.dataset.dec;
+    cart[id]--; if (cart[id] <= 0) delete cart[id];
+    renderCart(); return;
+  }
+
+  const tab = e.target.closest('.tab');
+  if (tab){ setScene(tab.dataset.scene); return; }
+
+  const dtab = e.target.closest('.dev-tab');
+  if (dtab){ setDevTab(dtab.dataset.dev); return; }
+
+  const per = e.target.closest('[data-persona]');
+  if (per){ setPersona(per.dataset.persona); return; }
+
+  const ccy = e.target.closest('[data-ccy]');
+  if (ccy){
+    storeCcy = ccy.dataset.ccy;
+    renderCcy(); renderGoods(); renderCart(); renderDev();
+    return;
+  }
+
+  const tu = e.target.closest('[data-topup]');
+  if (tu){ topupAmount = +tu.dataset.topup; renderTopups(); renderDev(); return; }
+
+  const copy = e.target.closest('[data-copy]');
+  if (copy){
+    navigator.clipboard?.writeText(copy.dataset.copy)
+      .then(()=>toast(t('copied')))
+      .catch(()=>{});
+    return;
+  }
+});
+
+$('#storePay').addEventListener('click', openCheckout);
+$('#invPay').addEventListener('click', openCheckout);
+$('#walletPay').addEventListener('click', openCheckout);
+$('#hotelPay').addEventListener('click', openCheckout);
+
+/* SADAD is a walkthrough of the customer's side — it calls nothing. */
+$('#sadadIssue').addEventListener('click', ()=>{
+  sadadStage = 1; renderSadad(); renderDev(); toast(t('sadadIssuedToast'));
+});
+$('#sadadPaid').addEventListener('click', ()=>{
+  sadadStage = 2; renderSadad(); toast(t('sadadPaidToast'));
+});
+
+/* Capture runs on the merchant's server — this only advances the story. */
+$('#hotelCapture').addEventListener('click', ()=>{
+  hotelStage = 2; renderHotel(); setDevTab('capture'); openDev(true);
+  toast(t('hotelCapturedToast'));
+});
+
+$('#sheetClose').addEventListener('click', closeCheckout);
+$('#sheetBg').addEventListener('click', e=>{ if (e.target.id === 'sheetBg') closeCheckout(); });
+document.addEventListener('keydown', e=>{ if (e.key === 'Escape') closeCheckout(); });
+
+$('#langBtn').addEventListener('click', ()=>{
+  lang = lang === 'en' ? 'ar' : 'en';
+  applyLang();
+  if ($('#sheetBg').classList.contains('open')) openCheckout();
+});
+
+$('#devBtn').addEventListener('click', ()=> openDev(!devOpen));
+
+document.addEventListener('input', e=>{
+  const f = e.target.closest('[data-meta]');
+  if (!f) return;
+  const i = +f.dataset.i;
+  if (meta[i]) meta[i][f.dataset.meta] = f.value;
+  renderDev();   // update the config preview, leave the inputs alone
+});
+
+$('#storeName').addEventListener('input', e=>{
+  const v = e.target.value.trim();
+  brandName = v || 'Mawj Coffee';
+  $('#storeAvatar').textContent = (v[0] || 'M').toUpperCase();
+  renderDev();
+});
+
+$('#resetBtn').addEventListener('click', ()=>{
+  let back = '';
+  try{
+    const s = sessionStorage.getItem('demo_scene');
+    if (s && SCENES[s] && s !== 'store') back = '?scene=' + encodeURIComponent(s);
+    sessionStorage.removeItem('demo_scene');
+  }catch(e){}
+  location.replace(location.pathname + back);
+});
+
+/* ── boot ── */
+
+/* A live key stops everything before anything can be paid. */
+if (keyIsLive()){
+  $('#blocked').classList.remove('hide');
+  $('#personas').classList.add('hide');
+  document.querySelectorAll('.pay-btn').forEach(b=>{
+    if (b.id !== 'resetBtn') b.disabled = true;
+  });
+} else if (!keyReady()){
+  $('#notice').classList.remove('hide');
+}
+
+/* The 3DS row only appears once a real card number has been pasted into
+   THREE_DS_CARD — better an absent row than a guessed card in a meeting. */
+if (THREE_DS_CARD && /^\d{12,19}$/.test(THREE_DS_CARD.replace(/\s/g,''))){
+  const digits = THREE_DS_CARD.replace(/\s/g,'');
+  const el = $('#tc3dsNum');
+  el.dataset.copy  = digits;
+  el.textContent   = digits.replace(/(\d{4})(?=\d)/g, '$1 ');
+  $('#tc3ds').classList.remove('hide');
+}
+
+/* a real authorisation happened earlier in this tab */
+try{ if (sessionStorage.getItem('demo_hotel') === '1') hotelStage = 1; }catch(e){}
+
+const urlScene = applyUrlBranding();
+applyLang();
+renderOpts();
+if (!checkCallback()) setScene(urlScene || 'store');
+</script>
+</body>
+</html>
